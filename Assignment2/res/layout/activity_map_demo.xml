@@ -1,0 +1,44 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/top"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/locator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/prompt_location"
+            style="@style/Prompt.Style"
+            android:text="@string/prompt_location"/>
+
+        <LinearLayout
+            android:id="@+id/inputs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="100" >
+
+            <EditText
+                android:id="@+id/edit_latitude"
+                style="@style/Location.Style"
+                android:hint="@string/label_latitude" />
+
+            <EditText
+                android:id="@+id/edit_longitude"
+                style="@style/Location.Style"
+                android:hint="@string/label_longitude" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/show_location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showLocation"
+        android:text="@string/show_location" />
+
+</LinearLayout>

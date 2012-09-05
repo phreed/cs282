@@ -1,0 +1,16 @@
+<resources>
+
+    <string name="title_activity_map_demo">Map Demo</string>
+    <string name="app_name">MapDemo</string>
+    <string name="prompt_location">Location</string>
+    <string name="label_longitude">Longitude</string>
+    <string name="label_latitude">Latitude</string>
+    <string name="show_location">Show Location</string>
+    <string name="menu_settings">Settings</string>
+    <string name="no_app_capable">no application to handle the intent</string>
+    <string name="latitude_format_error">latitude not formatted as a number</string>
+    <string name="longitude_format_error">longitude not formatted as a number</string>
+    <string name="latitude_bound_error">longitude out of proper bounds [-90.0 90.0]</string>
+    <string name="longitude_bound_error">latitude out of proper bounds [-180.0 180.0]</string>
+
+</resources>
