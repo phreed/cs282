@@ -1,7 +1,29 @@
-This assignment is submitted as a zipped Eclipse workspace.
-After unzipping the workspace (the workspace directory lab2_space is included),
-start Eclipse -> File -> Switch_Workspace.
-Select the unzipped workspace directory lab2_space.
-Build and run the Assignment2 project.
+
+== Export ==
+The project originates in a git repository from which the
+project is prepared for submission as follows:
+
+Create a Zip archive that contains the contents of the latest commit on the current branch. 
+The output format is inferred by the extension of the output file.
+
+git archive -o /tmp/Assignment2.zip HEAD
+
+
+== Import ==
+
+This assignment is submitted as a zipped Eclipse workspace project.
+Unzip the zip file into its own directory.
+This resulting file contains all of the files normally found in 
+an Eclipse workspace except for the .metadata directory.
+
+start Eclipse
+File -> Import -> General -> "Existing Projects into Workspace" -> [Next]
+"o - Select archive file" -> [Browse] -> {select the zip file} -> [Finish]
+
+== Run ==
+
+Use Eclipse to run the imported project.
+
+== Bugs ==
 
 There are no known bugs.
