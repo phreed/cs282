@@ -24,6 +24,72 @@ import android.widget.Toast;
 public class MapDemoActivity extends LifecycleLoggingActivity {
 	static private final String TAG = "MapDemo";
 
+/**
+ * Determine if the latitude is valid.
+ * Recall that the Mercator projection does not extend to the poles.
+ */
+        private double LATITUDE_MIN = -90.0;
+        private double LATITUDE_MERC_MIN = -85.05;
+        private double LATITUDE_MERC_MAX = 85.05;
+
+		private static Double validateLatitude(String latitudeString) {
+                final double latitude;
+		try {
+			latitude = Double.parseDouble(latitudeString);
+		} catch (NumberFormatException ex) {
+			Toast.makeText(MapDemoActivity.this,
+					R.string.latitude_format_error, Toast.LENGTH_LONG).show();
+			return Double.NAN;
+		}
+		if (latitude < LATITUDE_MIN) {
+			Toast.makeText(MapDemoActivity.this, R.string.latitude_lower_bound_error,
+					Toast.LENGTH_LONG).show();
+			return Double.NAN;
+		}
+		if (LATITUDE_MAX < latitude) {
+			Toast.makeText(MapDemoActivity.this, R.string.latitude_upper_bound_error,
+					Toast.LENGTH_LONG).show();
+			return Double.NAN;
+		}
+		if (latitude < LATITUDE_MERC_MIN) {
+			Toast.makeText(MapDemoActivity.this, R.string.latitude_mercator_lower_bound_error,
+					Toast.LENGTH_LONG).show();
+		}
+		if (LATITUDE_MERC_MAX < latitude) {
+			Toast.makeText(MapDemoActivity.this, R.string.latitude_mercator_upper_bound_error,
+					Toast.LENGTH_LONG).show();
+		}
+           }
+
+/**
+ * Determine if the latitude is valid.
+ * Recall that the Mercator projection does not extend to the poles.
+ */
+        private double LATITUDE_MAX = 90.0;
+        private double LONGITUDE_MIN = -180.0;
+        private double LONGITUDE_MAX = 180.0;
+		private static Double validateLongitude(String longitudeString) {
+                final double longitude;
+		try {
+			longitude = Double.parseDouble(longitudeString);
+		} catch (NumberFormatException ex) {
+			Toast.makeText(MapDemoActivity.this,
+					R.string.longitude_format_error, Toast.LENGTH_LONG).show();
+			return Double.NAN;
+		}
+		if (longitude < LATITUDE_MIN) {
+			Toast.makeText(MapDemoActivity.this, R.string.longitude_lower_bound_error,
+					Toast.LENGTH_LONG).show();
+			return Double.NAN;
+		}
+		if (LATITUDE_MAX < longitude) {
+			Toast.makeText(MapDemoActivity.this, R.string.longitude_upper_bound_error,
+					Toast.LENGTH_LONG).show();
+			return Double.NAN;
+		}
+           }
+
+
 	/**
 	 * There are some choices for the location schema.
 	 * <p>
@@ -44,11 +110,13 @@ public class MapDemoActivity extends LifecycleLoggingActivity {
 	 * 
 	 */
 	
-	static private Uri getLocationUri(double latitude, double longitude) {
-		final StringBuilder sb = new StringBuilder();
-		// sb.append("geo:");
-		sb.append("http://maps.google.com/?q=");
-		sb.append(latitude).append(",").append(longitude);
+        static final private String geoUriPrefix = "geo:";
+        static final private String httpUriPrefix = "http://maps.google.com/?q=";
+
+	static private Uri getLocationUri(String prefix, double latitude, double longitude) {
+		final StringBuilder sb = new StringBuilder()
+		.append(prefix)
+		.append(latitude).append(",").append(longitude);
 		return Uri.parse(sb.toString());
 	}
 
@@ -80,44 +148,38 @@ public class MapDemoActivity extends LifecycleLoggingActivity {
 	public void showLocation(View view) {
 
 		final Editable latitudeEditable = this.latitudeView.getText();
-		final Double latitude;
-		try {
-			latitude = Double.parseDouble(latitudeEditable.toString());
-		} catch (NumberFormatException ex) {
-			Toast.makeText(MapDemoActivity.this,
-					R.string.latitude_format_error, Toast.LENGTH_LONG).show();
-			return;
-		}
-		if (latitude < -90.0 || 90.0 < latitude) {
-			Toast.makeText(MapDemoActivity.this, R.string.latitude_bound_error,
-					Toast.LENGTH_LONG).show();
-			return;
-		}
+		final Double latitude = validateLatitude(latitudeEditable.toString());
+                if (latitude == Double.NAN) return;
 
 		final Editable longitudeEditable = this.longitudeView.getText();
-		final Double longitude;
-		try {
-			longitude = Double.parseDouble(longitudeEditable.toString());
-		} catch (NumberFormatException ex) {
-			Toast.makeText(MapDemoActivity.this,
-					R.string.longitude_format_error, Toast.LENGTH_LONG).show();
-			return;
-		}
-		if (longitude < -180.0 || 180.0 < longitude) {
-			Toast.makeText(MapDemoActivity.this,
-					R.string.longitude_bound_error, Toast.LENGTH_LONG).show();
-			return;
-		}
+		final Double longitude = validateLongitude(longitudeEditable.toString());
+                if (longitude == Double.NAN) return;
 
-		final Uri geoUri = getLocationUri(latitude, longitude);
+		final Uri geoUri = getLocationUri(geoUriPrefix, latitude, longitude);
 		Log.d(TAG, "starting activity with " + geoUri.toString());
 
-		final Intent locateIntent = new Intent(
-				android.content.Intent.ACTION_VIEW, geoUri);
+		final Intent geoLocateIntent;
 		try {
-			startActivity(locateIntent);
+		        geoLocateIntent = new Intent(
+				android.content.Intent.ACTION_VIEW, geoUri);
+			startActivity(geoLocateIntent);
+// Activity started successfully
+return; 
 		} catch (ActivityNotFoundException ex) {
-			Log.w(TAG, "no application to handle the intent");
+			Log.w(TAG, "no application to handle the intent "+ geoLocateIntent.toString());
+		}
+
+		final Uri httpUri = getLocationUri(httpUriPrefix, latitude, longitude);
+		Log.d(TAG, "starting activity with " + httpUri.toString());
+		final Intent httpLocateIntent;
+		try {
+		        httpLocateIntent = new Intent(
+				android.content.Intent.ACTION_VIEW, geoUri);
+			startActivity(httpgeoLocateIntent);
+// Activity started successfully
+return; 
+		} catch (ActivityNotFoundException ex) {
+			Log.w(TAG, "no application to handle the intent "+ httpLocateIntent.toString());
 			Toast.makeText(MapDemoActivity.this, R.string.no_app_capable,
 					Toast.LENGTH_LONG).show();
 		}

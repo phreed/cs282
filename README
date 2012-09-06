@@ -1,6 +1,7 @@
-This assignment is submitted as an Eclipse workspace.
-Start Eclipse -> File -> Switch_Workspace.
-Select the unzipped workspace directory.
+This assignment is submitted as a zipped Eclipse workspace.
+After unzipping the workspace (the workspace directory lab2_space is included),
+start Eclipse -> File -> Switch_Workspace.
+Select the unzipped workspace directory lab2_space.
 Build and run the Assignment2 project.
 
 There are no known bugs.

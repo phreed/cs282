@@ -1,0 +1,14 @@
+2012-09-05  Initial submission as Assignment2 for CS 282
+
+2012-09-07  Addressed suggestions by Dr. Doug Schmidt
+
+Enhance this solution so that it first uses a geo: uri intent
+failing over to the http://maps.google.com uri prefixed 
+intent in the case where geo: intent throws an exception.
+
+Augmented the range checking of the latitude and longitude
+to use named constants rather than literals.
+The validation of latitude and longitude were moved into
+there own methods.  
+In the case of latitude the Mercator projection limits
+are now detected.
