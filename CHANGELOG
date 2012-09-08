@@ -10,5 +10,12 @@ Augmented the range checking of the latitude and longitude
 to use named constants rather than literals.
 The validation of latitude and longitude were moved into
 there own methods.  
+
+2012-09-08 Make use of setError for invalid input 
+
+Enhance the error reporting by using the TextView.setError()
+method to indicate the incorrect input.
 In the case of latitude the Mercator projection limits
-are now detected.
+are now detected. This is presented as a Toast as it is
+not an incorrect thing for which to ask.  
+

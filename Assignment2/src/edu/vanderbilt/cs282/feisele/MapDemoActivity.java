@@ -18,14 +18,15 @@ import android.widget.Toast;
  * <p>
  * This behavior can be investigated with the activity manager "am".
  * 
- * @author phreed
+ * @author Fred Eisele <phreed@gmail.com>
  * 
  */
 public class MapDemoActivity extends LifecycleLoggingActivity {
 	static private final String TAG = "MapDemo";
 
 	/**
-	 * Determine if the latitude is valid. Recall that the Mercator projection
+	 * Extract the latitude determining if it is valid.
+	 * <p> Recall that the Mercator projection
 	 * does not extend to the poles.
 	 */
 	private double LATITUDE_MIN = -90.0;
@@ -33,25 +34,25 @@ public class MapDemoActivity extends LifecycleLoggingActivity {
 	private double LATITUDE_MERC_MAX = 85.05;
 	private double LATITUDE_MAX = 90.0;
 
-	private Double validateLatitude(String latitudeString) {
+	private Double extractLatitude(EditText view) {
+		final Editable latitudeEditable = view.getText();
+		final String latitudeString = latitudeEditable.toString();
 		final double latitude;
 		try {
 			latitude = Double.parseDouble(latitudeString);
 		} catch (NumberFormatException ex) {
-			Toast.makeText(MapDemoActivity.this,
-					R.string.latitude_format_error, Toast.LENGTH_LONG).show();
+			final String faultMsg = this.getResources().getString(R.string.latitude_format_error );
+			view.setError(faultMsg);
 			return Double.NaN;
 		}
 		if (latitude < LATITUDE_MIN) {
-			Toast.makeText(MapDemoActivity.this,
-					R.string.latitude_lower_bound_error, Toast.LENGTH_LONG)
-					.show();
+			final String faultMsg = this.getResources().getString(R.string.latitude_lower_bound_error );
+			view.setError(faultMsg);
 			return Double.NaN;
 		}
 		if (LATITUDE_MAX < latitude) {
-			Toast.makeText(MapDemoActivity.this,
-					R.string.latitude_upper_bound_error, Toast.LENGTH_LONG)
-					.show();
+			final String faultMsg = this.getResources().getString(R.string.latitude_upper_bound_error );
+			view.setError(faultMsg);
 			return Double.NaN;
 		}
 		if (latitude < LATITUDE_MERC_MIN) {
@@ -68,31 +69,30 @@ public class MapDemoActivity extends LifecycleLoggingActivity {
 	}
 
 	/**
-	 * Determine if the latitude is valid. Recall that the Mercator projection
-	 * does not extend to the poles.
+	 * Extract the longitude determining if it is valid.
 	 */
 	private double LONGITUDE_MIN = -180.0;
 	private double LONGITUDE_MAX = 180.0;
 
-	private Double validateLongitude(String longitudeString) {
+	private Double extractLongitude(EditText view) {
+		final Editable longitideEditable = view.getText();
+		final String longitudeString = longitideEditable.toString();
 		final double longitude;
 		try {
 			longitude = Double.parseDouble(longitudeString);
 		} catch (NumberFormatException ex) {
-			Toast.makeText(MapDemoActivity.this,
-					R.string.longitude_format_error, Toast.LENGTH_LONG).show();
+			final String faultMsg = this.getResources().getString(R.string.longitude_format_error );
+			view.setError(faultMsg);
 			return Double.NaN;
 		}
 		if (longitude < LONGITUDE_MIN) {
-			Toast.makeText(MapDemoActivity.this,
-					R.string.longitude_lower_bound_error, Toast.LENGTH_LONG)
-					.show();
+			final String faultMsg = this.getResources().getString(R.string.longitude_lower_bound_error );
+			view.setError(faultMsg);
 			return Double.NaN;
 		}
 		if (LONGITUDE_MAX < longitude) {
-			Toast.makeText(MapDemoActivity.this,
-					R.string.longitude_upper_bound_error, Toast.LENGTH_LONG)
-					.show();
+			final String faultMsg = this.getResources().getString(R.string.longitude_upper_bound_error );
+			view.setError(faultMsg);
 			return Double.NaN;
 		}
 		return longitude;
@@ -116,11 +116,11 @@ public class MapDemoActivity extends LifecycleLoggingActivity {
 	 */
 
 	static final private String geoUriPrefix = "geo:";
-	static final private String httpUriPrefix = "http://maps.google.com/?q=";
+	static final private String gmapsUriPrefix = "http://maps.google.com/?q=";
 
 	static private Uri getLocationUri(String prefix, double latitude,
 			double longitude) {
-		final StringBuilder sb = new StringBuilder().append(prefix)
+		final StringBuilder sb = new StringBuilder(prefix)
 				.append(latitude).append(",").append(longitude);
 		return Uri.parse(sb.toString());
 	}
@@ -146,20 +146,17 @@ public class MapDemoActivity extends LifecycleLoggingActivity {
 
 	/**
 	 * Performed when the show location button is clicked.
+	 * - extract and validate the latitude and longitude
+	 * - try starting activities with various intents
 	 * 
 	 * @param view
 	 *            the button view object (unused)
 	 */
 	public void showLocation(View view) {
 
-		final Editable latitudeEditable = this.latitudeView.getText();
-		final Double latitude = validateLatitude(latitudeEditable.toString());
-		if (latitude == Double.NaN)
-			return;
-
-		final Editable longitudeEditable = this.longitudeView.getText();
-		final Double longitude = validateLongitude(longitudeEditable.toString());
-		if (longitude == Double.NaN)
+		final Double latitude = extractLatitude(this.latitudeView);
+		final Double longitude = extractLongitude(this.longitudeView);
+		if (longitude.isNaN() || latitude.isNaN())
 			return;
 
 		final Uri geoUri = getLocationUri(geoUriPrefix, latitude, longitude);
@@ -172,22 +169,20 @@ public class MapDemoActivity extends LifecycleLoggingActivity {
 			// Activity started successfully
 			return;
 		} catch (ActivityNotFoundException ex) {
-			Log.w(TAG,
-					"no application to handle the intent " + geoUri.toString());
+			Log.w(TAG, "no application to handle the intent " + geoUri.toString());
 		}
 
-		final Uri httpUri = getLocationUri(httpUriPrefix, latitude, longitude);
-		Log.d(TAG, "starting activity with " + httpUri.toString());
+		final Uri gmapsUri = getLocationUri(gmapsUriPrefix, latitude, longitude);
+		Log.d(TAG, "starting activity with " + gmapsUri.toString());
 
 		try {
 			final Intent locateIntent = new Intent(
-					android.content.Intent.ACTION_VIEW, geoUri);
+					android.content.Intent.ACTION_VIEW, gmapsUri);
 			startActivity(locateIntent);
 			// Activity started successfully
 			return;
 		} catch (ActivityNotFoundException ex) {
-			Log.w(TAG,
-					"no application to handle the intent " + httpUri.toString());
+			Log.w(TAG, "no application to handle the intent " + gmapsUri.toString());
 			Toast.makeText(MapDemoActivity.this, R.string.no_app_capable,
 					Toast.LENGTH_LONG).show();
 		}
