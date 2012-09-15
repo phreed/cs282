@@ -56,11 +56,25 @@ public class MapDemoActivity extends LifecycleLoggingActivity {
 			return Double.NaN;
 		}
 		if (latitude < LATITUDE_MERC_MIN) {
+                        final Drawable dr = this.getResources().
+                                getDrawable(R.drawable.indicator_input_warn);
+
+                        dr.setBounds(0, 0, dr.getIntrinsicWidth(), dr.getIntrinsicHeight())
+			final String faultMsg = this.getResources().
+                                getString(R.string.latitude_mercator_lower_bound_error );
+			view.setError(faultMsg, dr);
 			Toast.makeText(MapDemoActivity.this,
 					R.string.latitude_mercator_lower_bound_warn,
 					Toast.LENGTH_LONG).show();
 		}
 		if (LATITUDE_MERC_MAX < latitude) {
+                        final Drawable dr = this.getResources().
+                                getDrawable(R.drawable.indicator_input_warn);
+
+                        dr.setBounds(0, 0, dr.getIntrinsicWidth(), dr.getIntrinsicHeight())
+			final String faultMsg = this.getResources().
+                                getString(R.string.latitude_mercator_upper_bound_error );
+			view.setError(faultMsg, dr);
 			Toast.makeText(MapDemoActivity.this,
 					R.string.latitude_mercator_upper_bound_warn,
 					Toast.LENGTH_LONG).show();
