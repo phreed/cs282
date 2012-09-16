@@ -2,6 +2,7 @@ package edu.vanderbilt.cs282.feisele;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
@@ -59,9 +60,9 @@ public class MapDemoActivity extends LifecycleLoggingActivity {
                         final Drawable dr = this.getResources().
                                 getDrawable(R.drawable.indicator_input_warn);
 
-                        dr.setBounds(0, 0, dr.getIntrinsicWidth(), dr.getIntrinsicHeight())
+                        dr.setBounds(0, 0, dr.getIntrinsicWidth(), dr.getIntrinsicHeight());
 			final String faultMsg = this.getResources().
-                                getString(R.string.latitude_mercator_lower_bound_error );
+                                getString(R.string.latitude_mercator_lower_bound_warn );
 			view.setError(faultMsg, dr);
 			Toast.makeText(MapDemoActivity.this,
 					R.string.latitude_mercator_lower_bound_warn,
@@ -71,9 +72,9 @@ public class MapDemoActivity extends LifecycleLoggingActivity {
                         final Drawable dr = this.getResources().
                                 getDrawable(R.drawable.indicator_input_warn);
 
-                        dr.setBounds(0, 0, dr.getIntrinsicWidth(), dr.getIntrinsicHeight())
+                        dr.setBounds(0, 0, dr.getIntrinsicWidth(), dr.getIntrinsicHeight());
 			final String faultMsg = this.getResources().
-                                getString(R.string.latitude_mercator_upper_bound_error );
+                                getString(R.string.latitude_mercator_upper_bound_warn );
 			view.setError(faultMsg, dr);
 			Toast.makeText(MapDemoActivity.this,
 					R.string.latitude_mercator_upper_bound_warn,

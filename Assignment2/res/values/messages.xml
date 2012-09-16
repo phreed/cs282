@@ -8,5 +8,6 @@
     <string name="latitude_lower_bound_error">latitude below proper bounds [-90.0 90.0]</string>
     <string name="latitude_mercator_lower_bound_warn">latitude below Mercator bounds [-85.0 85.0]]</string>
     <string name="longitude_lower_bound_error">longitude below proper bounds [-180.0 180.0]</string>
+    
 
 </resources>

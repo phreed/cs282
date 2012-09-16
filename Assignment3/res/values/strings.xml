@@ -1,0 +1,14 @@
+<resources>
+
+    <string name="title_activity">Threaded Download</string>
+    <string name="app_name">ThreadedDownload</string>
+    <string name="label_run_runnable">Run&#10;Runnable</string>
+    <string name="label_run_messages">Run&#10;Messages</string>
+    <string name="label_run_async_task">Run&#10;Async</string>
+    <string name="label_reset_image">Reset&#10;Image</string>
+    <string name="prompt_image_url">Enter URL:</string>
+    <string name="describe_image">An image to display</string>
+    <string name="hint_image_url">&lt;scheme&gt;://&lt;host&gt;</string>
+    <string name="menu_settings">menu settings</string>
+
+</resources>
