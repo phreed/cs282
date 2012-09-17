@@ -55,11 +55,11 @@ import android.widget.Toast;
  * of the following three Android concurrency models:
  * <dl>
  * <dt>Run Runnables</dt>
- * <dd><b>Runnables and Handlers</b> model</dd>
+ * <dd><b>Runnables and Handlers</b> model: faults are handled by posting a runnable to the handler</dd>
  * <dt>Run Messages</dt>
- * <dd><b>Messages and Handlers</b> model</dd>
+ * <dd><b>Messages and Handlers</b> model: faults are handled by sending a message to the message handler</dd>
  * <dt>Run Async</dt>
- * <dd><b>AsyncTask</b> model</dd>
+ * <dd><b>AsyncTask</b> model: faults are handled by running them on the UI thread</dd>
  * </dl>
  * The Button objects that download the bitmap file are connected to the
  * corresponding <code>ThreadedDownloadActivity.run*()</code> methods via the
@@ -78,10 +78,9 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	/**
 	 * The valid message types for the handler.
 	 */
-
 	protected static final int SET_PROGRESS_VISIBILITY = 1;
 	protected static final int SET_BITMAP = 2;
-
+	protected static final int SET_ERROR = 3;
 
 	private final Handler handler = new Handler();
 
@@ -89,28 +88,8 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	private ImageView image = null;
 	private ProgressDialog progress;
 
-	private final Handler msgHandler = new Handler() {
-		private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
-		public void handleMessage(Message msg) {
-			switch (msg.what) {
-				case SET_PROGRESS_VISIBILITY: {
-					parent.startProgress();
-				}
-				break;
-				case SET_BITMAP: {
-					final Bitmap bitmap = (Bitmap) msg.obj;
-					if (bitmap != null) {
-						parent.image.setImageBitmap(bitmap);
-					}
-					if (parent.progress.isShowing()) {
-						parent.progress.dismiss();
-					}
-				}
-				break;
-			}
-		}
-	};
-	
+	private static Handler msgHandler = null; 
+
 	/**
 	 * 
 	 * @param savedInstanceState
@@ -124,6 +103,8 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 		this.image = (ImageView) findViewById(R.id.current_image);
 
 		this.resetImage(null);
+		
+		ThreadedDownloadActivity.msgHandler = initMsgHandler(this);
 	}
 
 	@Override
@@ -202,7 +183,7 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	}
 
 	/**
-	 * Indicate that the specified URL cannot be downloaded.
+	 * Indicate that the specified URL cannot be down loaded.
 	 */
 	private static class InvalidUriRunnable implements Runnable {
 		final private ThreadedDownloadActivity parent;
@@ -329,7 +310,7 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 				} catch (InterruptedException ex) {
 					final CharSequence errorMsg = parent.getResources()
 							.getText(R.string.error_loading_via_messages);
-					parent.runOnUiThread(new InvalidUriRunnable(parent,
+					parent.handler.post(new InvalidUriRunnable(parent,
 							errorMsg));
 					return;
 				}
@@ -349,32 +330,70 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	}
 
 	/**
-	 * Make use of the message handler to keep the UI updated.
-	 * 
+	 * Make use of the message handler to keep the UI updated. Notice that this
 	 */
 	public void runMessages(View view) {
 		final URL url = getValidUrlFromWidget();
-		
+
 		final Thread thread = new Thread(null, new Runnable() {
 			private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
+            private final Handler handler = ThreadedDownloadActivity.msgHandler;
 			public void run() {
-				final Message startMsg = parent.msgHandler.obtainMessage(SET_PROGRESS_VISIBILITY, ProgressDialog.STYLE_SPINNER);
-				parent.msgHandler.sendMessage(startMsg);
-				
+				final Message startMsg = handler.obtainMessage(
+						SET_PROGRESS_VISIBILITY, ProgressDialog.STYLE_SPINNER);
+				handler.sendMessage(startMsg);
+
 				final Bitmap bitmap;
 				try {
 					bitmap = parent.downloadBitmap(url);
 				} catch (InterruptedException ex) {
-					final CharSequence errorMsg = parent.getResources()
-							.getText(R.string.error_loading_via_messages);
-					parent.runOnUiThread(new InvalidUriRunnable(parent,
-							errorMsg));
+					final Message errorMsg = handler.obtainMessage(
+							SET_ERROR,
+							parent.getResources().getText(
+									R.string.error_loading_via_messages));
+					handler.sendMessage(errorMsg);
 					return;
 				}
-				final Message bitmapMsg = parent.msgHandler.obtainMessage(SET_BITMAP, bitmap);
-				parent.msgHandler.sendMessage(bitmapMsg);
+				final Message bitmapMsg = handler.obtainMessage(
+						SET_BITMAP, bitmap);
+				handler.sendMessage(bitmapMsg);
 			}
 		});
 		thread.start();
+	}
+
+	/**
+	 * Initialized the handler used by the run message method.
+	 * 
+	 * @return
+	 */
+	private static Handler initMsgHandler(final ThreadedDownloadActivity parent) {
+		return new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				switch (msg.what) {
+				case SET_PROGRESS_VISIBILITY: {
+					parent.startProgress();
+				}
+					break;
+				case SET_BITMAP: {
+					final Bitmap bitmap = (Bitmap) msg.obj;
+					if (bitmap != null) {
+						parent.image.setImageBitmap(bitmap);
+					}
+					if (parent.progress.isShowing()) {
+						parent.progress.dismiss();
+					}
+				}
+					break;
+				case SET_ERROR: {
+					final CharSequence errorMsg = (CharSequence) msg.obj;
+					parent.urlEditText.setError(errorMsg);
+					Toast.makeText(parent, errorMsg, Toast.LENGTH_LONG).show();
+				}
+					break;
+				}
+			}
+		};
 	}
 }
