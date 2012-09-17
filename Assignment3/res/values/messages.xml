@@ -5,8 +5,11 @@
     <string name="error_loading_via_runnable">error loading via Runnable</string>
     <string name="error_loading_via_messages">error loading via Message</string>
     <string name="error_loading_via_async_task">error loading via AsyncTask</string>
+    <string name="error_malformed_url">error malformed url</string>
+    <string name="error_downloading_url">error downloading url</string>
     <string name="message_downloading_async_task">downloading via AsyncTask</string>
     <string name="message_downloading_message">downloading via Message</string>
     <string name="message_downloading_runnable">downloading via Runnable</string>
+    <string name="message_progress_start">download starting</string>
 
 </resources>

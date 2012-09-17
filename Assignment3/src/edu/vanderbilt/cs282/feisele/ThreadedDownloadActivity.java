@@ -2,10 +2,14 @@ package edu.vanderbilt.cs282.feisele;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
+import android.app.ProgressDialog;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -66,9 +70,13 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 
 	/** my oldest daughter */
 	static private final String DEFAULT_IMAGE = "raquel_eisele_2012.jpg";
-	
+	static private final String DEFAULT_DOWNLOAD_IMAGE = "http://www.dre.vanderbilt.edu/~schmidt/ka.png";
+
 	private EditText urlEditText = null;
 	private ImageView image = null;
+	private ProgressDialog progress;
+
+
 
 	/**
 	 * 
@@ -81,18 +89,47 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 
 		this.urlEditText = (EditText) findViewById(R.id.edit_image_url);
 		this.image = (ImageView) findViewById(R.id.current_image);
-		
+
 		this.resetImage(null);
 	}
-	
+
 	@Override
 	public void onResume() {
 		super.onResume();
 	}
-	
+
 	@Override
 	public void onPause() {
 		super.onPause();
+	}
+
+	/**
+	 * Load the default image from the assets.
+	 * 
+	 * @param view
+	 */
+	public void resetImage(View view) {
+		final AssetManager am = this.getAssets();
+		final InputStream is;
+		try {
+			is = am.open(DEFAULT_IMAGE);
+		} catch (IOException ex) {
+			Toast.makeText(this, R.string.error_opening_default_image,
+					Toast.LENGTH_LONG).show();
+			return;
+		}
+		final Bitmap bm;
+		try {
+			bm = BitmapFactory.decodeStream(is);
+			this.image.setImageBitmap(bm);
+		} finally {
+			try {
+				is.close();
+			} catch (IOException ex) {
+
+			}
+		}
+
 	}
 
 	/**
@@ -103,49 +140,95 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	 * @param view
 	 *            the button view object (unused)
 	 */
-
-	private Bitmap downloadBitmap(String url) {
-		return null;
+	private Bitmap downloadBitmap(String urlStr) throws InterruptedException {
+		try {
+			final URL url = new URL(urlStr);
+			final InputStream is = url.openConnection().getInputStream();
+			return BitmapFactory.decodeStream(is);
+		} catch (MalformedURLException ex) {
+			Toast.makeText(this, R.string.error_malformed_url,
+					Toast.LENGTH_LONG).show();
+			return null;
+		} catch (IOException e) {
+			Toast.makeText(this, R.string.error_downloading_url,
+					Toast.LENGTH_LONG).show();
+			return null;
+		}
 	}
-
-	public void runRunnable(View view) {
-		Toast.makeText(this, R.string.error_loading_via_runnable, Toast.LENGTH_LONG).show();
-	}
-
-	public void runMessages(View view) {
-		Toast.makeText(this, R.string.error_loading_via_messages, Toast.LENGTH_LONG).show();
-	}
-
-	public void runAsyncTask(View view) {
-		Toast.makeText(this, R.string.error_loading_via_async_task, Toast.LENGTH_LONG).show();
+	
+	private void startProgress() {
+		this.progress = new ProgressDialog(this);
+		this.progress.setTitle(R.string.dialog_progress_title);
+		this.progress.setMessage(this.getResources().getText(
+				R.string.message_progress_start));
+		this.progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		this.progress.setProgress(0);
+		this.progress.show();	
 	}
 
 	/**
-	 * Load the default image from the assets.
-	
+	 * The async task will be stopped if the enclosing activity is stopped. In
+	 * general the intent service should be used for downloading from the
+	 * internet.
 	 * 
 	 * @param view
 	 */
-	public void resetImage(View view) {
-		final AssetManager am = this.getAssets();
-		final InputStream is;
-		try {
-			is = am.open(DEFAULT_IMAGE );
-		} catch (IOException ex) {
-			Toast.makeText(this, R.string.error_opening_default_image, Toast.LENGTH_LONG).show();
-			return;
-		}
-		final Bitmap bm;
-		try {
-			bm = BitmapFactory.decodeStream(is);
-			this.image.setImageBitmap(bm);
-		} finally {
-			try {
-			is.close();
-			} catch (IOException ex) {
-				
-			}
-		}
+	public void runAsyncTask(View view) {
 		
+		final AsyncTask<String, Void, Bitmap> task = new AsyncTask<String, Void, Bitmap>() {
+			private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
+
+			@Override
+			protected Bitmap doInBackground(String... params) {
+				for (final String uri : params) {
+					try {
+						return parent.downloadBitmap(uri);
+					} catch (InterruptedException ex) {
+						Toast.makeText(parent,
+								R.string.error_loading_via_async_task,
+								Toast.LENGTH_LONG).show();
+						return null;
+					}
+				}
+				return null;
+			}
+
+			@Override
+			protected void onPostExecute(Bitmap result) {
+				if (parent.progress.isShowing()) {
+					parent.progress.dismiss();
+				}
+				parent.image.setImageBitmap(result);
+			}
+
+			@Override
+			protected void onPreExecute() {
+				parent.startProgress();
+			}
+
+			@Override
+			protected void onProgressUpdate(Void... values) {
+			}
+		};
+		final String urlStr = this.urlEditText.getText().toString();
+		task.execute(DEFAULT_DOWNLOAD_IMAGE);
+		// task.execute(urlStr);
 	}
+
+	/**
+	 * Add runnable to the message queue
+	 * 
+	 * @param view
+	 */
+	public void runRunnable(View view) {
+
+		Toast.makeText(this, R.string.error_loading_via_runnable,
+				Toast.LENGTH_LONG).show();
+	}
+
+	public void runMessages(View view) {
+		Toast.makeText(this, R.string.error_loading_via_messages,
+				Toast.LENGTH_LONG).show();
+	}
+
 }
