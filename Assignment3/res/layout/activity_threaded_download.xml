@@ -17,7 +17,7 @@
         <EditText
             android:id="@+id/edit_image_url"
             style="@style/Url.EditText.Style"
-            android:hint="@string/hint_image_url" />
+            android:hint="@string/default_image_url" />
     </LinearLayout>
 
     <LinearLayout
