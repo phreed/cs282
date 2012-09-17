@@ -11,6 +11,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.text.Editable;
 import android.util.Log;
 import android.view.View;
@@ -73,10 +75,42 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	/** my oldest daughter */
 	static private final String DEFAULT_IMAGE = "raquel_eisele_2012.jpg";
 
+	/**
+	 * The valid message types for the handler.
+	 */
+
+	protected static final int SET_PROGRESS_VISIBILITY = 1;
+	protected static final int SET_BITMAP = 2;
+
+
+	private final Handler handler = new Handler();
+
 	private EditText urlEditText = null;
 	private ImageView image = null;
 	private ProgressDialog progress;
 
+	private final Handler msgHandler = new Handler() {
+		private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+				case SET_PROGRESS_VISIBILITY: {
+					parent.startProgress();
+				}
+				break;
+				case SET_BITMAP: {
+					final Bitmap bitmap = (Bitmap) msg.obj;
+					if (bitmap != null) {
+						parent.image.setImageBitmap(bitmap);
+					}
+					if (parent.progress.isShowing()) {
+						parent.progress.dismiss();
+					}
+				}
+				break;
+			}
+		}
+	};
+	
 	/**
 	 * 
 	 * @param savedInstanceState
@@ -132,10 +166,9 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	}
 
 	/**
-	 * Extract the url from the edit text widget.
-	 * Check that the string in the widget is a proper url.
-	 * If the field is empty then use the value provided as the hint.
-	 * If the field is invalid
+	 * Extract the url from the edit text widget. Check that the string in the
+	 * widget is a proper url. If the field is empty then use the value provided
+	 * as the hint. If the field is invalid
 	 * <ul>
 	 * <li>return a null indicating that the action should not be performed.</li>
 	 * <li>generate a toast informing the operator of his error</li>
@@ -154,29 +187,33 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 				Log.e(TAG, "hard coded, should never happen");
 				return null;
 			}
-		} 
+		}
 		final String urlStr = urlEditable.toString();
 		try {
 			return new URL(urlStr);
 		} catch (MalformedURLException ex) {
-			Log.i(TAG, "malformed url "+urlStr);
+			Log.i(TAG, "malformed url " + urlStr);
 		}
-		final CharSequence errorMsg = this.getResources().getText(R.string.error_malformed_url);
+		final CharSequence errorMsg = this.getResources().getText(
+				R.string.error_malformed_url);
 		this.urlEditText.setError(errorMsg);
 		Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
 		return null;
 	}
-	
-	/** 
+
+	/**
 	 * Indicate that the specified URL cannot be downloaded.
 	 */
 	private static class InvalidUriRunnable implements Runnable {
 		final private ThreadedDownloadActivity parent;
 		final private CharSequence msg;
-		public InvalidUriRunnable(ThreadedDownloadActivity parent, CharSequence msg) {
+
+		public InvalidUriRunnable(ThreadedDownloadActivity parent,
+				CharSequence msg) {
 			this.parent = parent;
 			this.msg = msg;
 		}
+
 		public void run() {
 			parent.urlEditText.setError(this.msg);
 			Toast.makeText(this.parent, this.msg, Toast.LENGTH_LONG).show();
@@ -196,8 +233,9 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 			final InputStream is = url.openConnection().getInputStream();
 			return BitmapFactory.decodeStream(is);
 		} catch (IOException e) {
-			final CharSequence errorMsg = this.getResources().getText(R.string.error_downloading_url);
-			this.runOnUiThread(new InvalidUriRunnable(this, errorMsg)); 
+			final CharSequence errorMsg = this.getResources().getText(
+					R.string.error_downloading_url);
+			this.runOnUiThread(new InvalidUriRunnable(this, errorMsg));
 			return null;
 		}
 	}
@@ -234,9 +272,10 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 					try {
 						return parent.downloadBitmap(url);
 					} catch (InterruptedException ex) {
-						Toast.makeText(parent,
-								R.string.error_loading_via_async_task,
-								Toast.LENGTH_LONG).show();
+						final CharSequence errorMsg = parent.getResources()
+								.getText(R.string.error_loading_via_runnable);
+						parent.runOnUiThread(new InvalidUriRunnable(parent,
+								errorMsg));
 						return null;
 					}
 				}
@@ -248,11 +287,12 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 			 */
 			@Override
 			protected void onPostExecute(Bitmap result) {
+				if (result != null) {
+					parent.image.setImageBitmap(result);
+				}
 				if (parent.progress.isShowing()) {
 					parent.progress.dismiss();
 				}
-				if (result == null) return;
-				parent.image.setImageBitmap(result);
 			}
 
 			@Override
@@ -265,23 +305,76 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 			}
 		};
 		final URL url = getValidUrlFromWidget();
-		if (url != null) task.execute(url);
+		if (url != null)
+			task.execute(url);
 	}
 
 	/**
-	 * Add runnable to the message queue
+	 * Start a new thread to perform the download. Once the download is
+	 * completed the UI thread is notified via a post to on the handler.
 	 * 
 	 * @param view
 	 */
 	public void runRunnable(View view) {
+		this.startProgress();
+		final URL url = getValidUrlFromWidget();
 
-		Toast.makeText(this, R.string.error_loading_via_runnable,
-				Toast.LENGTH_LONG).show();
+		final Thread thread = new Thread(null, new Runnable() {
+			private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
+
+			public void run() {
+				final Bitmap bitmap;
+				try {
+					bitmap = parent.downloadBitmap(url);
+				} catch (InterruptedException ex) {
+					final CharSequence errorMsg = parent.getResources()
+							.getText(R.string.error_loading_via_messages);
+					parent.runOnUiThread(new InvalidUriRunnable(parent,
+							errorMsg));
+					return;
+				}
+				parent.handler.post(new Runnable() {
+					public void run() {
+						if (bitmap != null) {
+							parent.image.setImageBitmap(bitmap);
+						}
+						if (parent.progress.isShowing()) {
+							parent.progress.dismiss();
+						}
+					}
+				});
+			}
+		});
+		thread.start();
 	}
 
+	/**
+	 * Make use of the message handler to keep the UI updated.
+	 * 
+	 */
 	public void runMessages(View view) {
-		Toast.makeText(this, R.string.error_loading_via_messages,
-				Toast.LENGTH_LONG).show();
+		final URL url = getValidUrlFromWidget();
+		
+		final Thread thread = new Thread(null, new Runnable() {
+			private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
+			public void run() {
+				final Message startMsg = parent.msgHandler.obtainMessage(SET_PROGRESS_VISIBILITY, ProgressDialog.STYLE_SPINNER);
+				parent.msgHandler.sendMessage(startMsg);
+				
+				final Bitmap bitmap;
+				try {
+					bitmap = parent.downloadBitmap(url);
+				} catch (InterruptedException ex) {
+					final CharSequence errorMsg = parent.getResources()
+							.getText(R.string.error_loading_via_messages);
+					parent.runOnUiThread(new InvalidUriRunnable(parent,
+							errorMsg));
+					return;
+				}
+				final Message bitmapMsg = parent.msgHandler.obtainMessage(SET_BITMAP, bitmap);
+				parent.msgHandler.sendMessage(bitmapMsg);
+			}
+		});
+		thread.start();
 	}
-
 }
