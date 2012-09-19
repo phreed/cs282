@@ -201,23 +201,30 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 		}
 	}
 
+	private static class FailedDownload extends Exception {
+		private static final long serialVersionUID = 6673968049922918951L;
+		
+		final public CharSequence msg;
+		public FailedDownload(CharSequence msg) {
+			super();
+			this.msg = msg;
+		}
+	}
 	/**
-	 * Performed when the show location button is clicked. - extract and
-	 * validate the latitude and longitude - try starting activities with
-	 * various intents
+	 * Download the provided image url.
+	 * If there is a problem an exception is raised and the
+	 * calling method is expected to handle it in an appropriate manner.
 	 * 
 	 * @param view
 	 *            the button view object (unused)
 	 */
-	private Bitmap downloadBitmap(URL url) throws InterruptedException {
+	private Bitmap downloadBitmap(URL url) throws FailedDownload {
 		try {
 			final InputStream is = url.openConnection().getInputStream();
 			return BitmapFactory.decodeStream(is);
 		} catch (IOException e) {
-			final CharSequence errorMsg = this.getResources().getText(
-					R.string.error_downloading_url);
-			this.runOnUiThread(new InvalidUriRunnable(this, errorMsg));
-			return null;
+			throw new FailedDownload(this.getResources().getText(
+					R.string.error_downloading_url));
 		}
 	}
 
@@ -252,11 +259,9 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 				for (final URL url : params) {
 					try {
 						return parent.downloadBitmap(url);
-					} catch (InterruptedException ex) {
-						final CharSequence errorMsg = parent.getResources()
-								.getText(R.string.error_loading_via_runnable);
+					} catch (FailedDownload ex) {
 						parent.runOnUiThread(new InvalidUriRunnable(parent,
-								errorMsg));
+								ex.msg));
 						return null;
 					}
 				}
@@ -307,11 +312,9 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 				final Bitmap bitmap;
 				try {
 					bitmap = parent.downloadBitmap(url);
-				} catch (InterruptedException ex) {
-					final CharSequence errorMsg = parent.getResources()
-							.getText(R.string.error_loading_via_messages);
+				} catch (FailedDownload ex) {
 					parent.handler.post(new InvalidUriRunnable(parent,
-							errorMsg));
+							ex.msg));
 					return;
 				}
 				parent.handler.post(new Runnable() {
@@ -346,11 +349,9 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 				final Bitmap bitmap;
 				try {
 					bitmap = parent.downloadBitmap(url);
-				} catch (InterruptedException ex) {
+				} catch (FailedDownload ex) {
 					final Message errorMsg = handler.obtainMessage(
-							SET_ERROR,
-							parent.getResources().getText(
-									R.string.error_loading_via_messages));
+							SET_ERROR, ex.msg);
 					handler.sendMessage(errorMsg);
 					return;
 				}
