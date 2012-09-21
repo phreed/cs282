@@ -21,7 +21,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".ThreadedDownloadActivity"
-            android:label="@string/title_activity" >
+            android:label="@string/title_activity" 
+            android:configChanges="keyboardHidden|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -106,7 +106,16 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 		
 		ThreadedDownloadActivity.msgHandler = initMsgHandler(this);
 	}
-
+/**
+ * The download is performed by a background task.
+ * In order to prevent this from being stopped prematurely.
+ * ...
+ */
+@Override
+public void onConfigurationChanged(Configuration newConfig) {
+  super.onConfigurationChanged(newConfig);
+  setContentView(R.layout.myLayout);
+}
 	@Override
 	public void onResume() {
 		super.onResume();
