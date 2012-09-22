@@ -55,11 +55,14 @@ import android.widget.Toast;
  * of the following three Android concurrency models:
  * <dl>
  * <dt>Run Runnables</dt>
- * <dd><b>Runnables and Handlers</b> model: faults are handled by posting a runnable to the handler</dd>
+ * <dd><b>Runnables and Handlers</b> model: faults are handled by posting a
+ * runnable to the handler</dd>
  * <dt>Run Messages</dt>
- * <dd><b>Messages and Handlers</b> model: faults are handled by sending a message to the message handler</dd>
+ * <dd><b>Messages and Handlers</b> model: faults are handled by sending a
+ * message to the message handler</dd>
  * <dt>Run Async</dt>
- * <dd><b>AsyncTask</b> model: faults are handled by running them on the UI thread</dd>
+ * <dd><b>AsyncTask</b> model: faults are handled by running them on the UI
+ * thread</dd>
  * </dl>
  * The Button objects that download the bitmap file are connected to the
  * corresponding <code>ThreadedDownloadActivity.run*()</code> methods via the
@@ -75,20 +78,13 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	/** my oldest daughter */
 	static private final String DEFAULT_IMAGE = "raquel_eisele_2012.jpg";
 
-	/**
-	 * The valid message types for the handler.
-	 */
-	protected static final int SET_PROGRESS_VISIBILITY = 1;
-	protected static final int SET_BITMAP = 2;
-	protected static final int SET_ERROR = 3;
-
 	private final Handler handler = new Handler();
 
 	private EditText urlEditText = null;
 	private ImageView image = null;
 	private ProgressDialog progress;
 
-	private static Handler msgHandler = null; 
+	private static Handler msgHandler = null;
 
 	/**
 	 * 
@@ -103,19 +99,15 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 		this.image = (ImageView) findViewById(R.id.current_image);
 
 		this.resetImage(null);
-		
+
 		ThreadedDownloadActivity.msgHandler = initMsgHandler(this);
 	}
-/**
- * The download is performed by a background task.
- * In order to prevent this from being stopped prematurely.
- * ...
- */
-@Override
-public void onConfigurationChanged(Configuration newConfig) {
-  super.onConfigurationChanged(newConfig);
-  setContentView(R.layout.myLayout);
-}
+
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+		return handler;
+	}
+
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -212,17 +204,19 @@ public void onConfigurationChanged(Configuration newConfig) {
 
 	private static class FailedDownload extends Exception {
 		private static final long serialVersionUID = 6673968049922918951L;
-		
+
 		final public CharSequence msg;
+
 		public FailedDownload(CharSequence msg) {
 			super();
 			this.msg = msg;
 		}
 	}
+
 	/**
-	 * Download the provided image url.
-	 * If there is a problem an exception is raised and the
-	 * calling method is expected to handle it in an appropriate manner.
+	 * Download the provided image url. If there is a problem an exception is
+	 * raised and the calling method is expected to handle it in an appropriate
+	 * manner.
 	 * 
 	 * @param view
 	 *            the button view object (unused)
@@ -322,8 +316,7 @@ public void onConfigurationChanged(Configuration newConfig) {
 				try {
 					bitmap = parent.downloadBitmap(url);
 				} catch (FailedDownload ex) {
-					parent.handler.post(new InvalidUriRunnable(parent,
-							ex.msg));
+					parent.handler.post(new InvalidUriRunnable(parent, ex.msg));
 					return;
 				}
 				parent.handler.post(new Runnable() {
@@ -342,30 +335,47 @@ public void onConfigurationChanged(Configuration newConfig) {
 	}
 
 	/**
-	 * Make use of the message handler to keep the UI updated. Notice that this
+	 * The valid message types for the handler.
+	 */
+	protected static enum DownloadState {
+		/** indicate that the download is in progress and the progress spinner should be displayed */
+		SET_PROGRESS_VISIBILITY,
+		/** indicate that the download is complete and so the bitmap should be displayed */
+		SET_BITMAP,
+		/** indicate that the download has failed and so the default image should be shown */
+		SET_ERROR;
+
+		static DownloadState[] lookup = DownloadState.values();
+	}
+
+	/**
+	 * Make use of the message handler to keep the UI updated.
+	 * 
 	 */
 	public void runMessages(View view) {
 		final URL url = getValidUrlFromWidget();
 
 		final Thread thread = new Thread(null, new Runnable() {
 			private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
-            private final Handler handler = ThreadedDownloadActivity.msgHandler;
+			private final Handler handler = ThreadedDownloadActivity.msgHandler;
+
 			public void run() {
 				final Message startMsg = handler.obtainMessage(
-						SET_PROGRESS_VISIBILITY, ProgressDialog.STYLE_SPINNER);
+						DownloadState.SET_PROGRESS_VISIBILITY.ordinal(),
+						ProgressDialog.STYLE_SPINNER);
 				handler.sendMessage(startMsg);
 
 				final Bitmap bitmap;
 				try {
 					bitmap = parent.downloadBitmap(url);
 				} catch (FailedDownload ex) {
-					final Message errorMsg = handler.obtainMessage(
-							SET_ERROR, ex.msg);
+					final Message errorMsg = handler.obtainMessage(DownloadState.SET_ERROR.ordinal(),
+							ex.msg);
 					handler.sendMessage(errorMsg);
 					return;
 				}
-				final Message bitmapMsg = handler.obtainMessage(
-						SET_BITMAP, bitmap);
+				final Message bitmapMsg = handler.obtainMessage(DownloadState.SET_BITMAP.ordinal(),
+						bitmap);
 				handler.sendMessage(bitmapMsg);
 			}
 		});
@@ -381,7 +391,7 @@ public void onConfigurationChanged(Configuration newConfig) {
 		return new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
-				switch (msg.what) {
+				switch (DownloadState.lookup[msg.what]) {
 				case SET_PROGRESS_VISIBILITY: {
 					parent.startProgress();
 				}
