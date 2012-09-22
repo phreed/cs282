@@ -74,6 +74,13 @@ public abstract class LifecycleLoggingActivity extends Activity {
 		super.onRestart();
 		Log.d(TAG, "onRestart");
 	}
+	
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+		final Object obj = super.onRetainNonConfigurationInstance();
+		Log.d(TAG, "onRestart");
+		return obj;
+	}
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {

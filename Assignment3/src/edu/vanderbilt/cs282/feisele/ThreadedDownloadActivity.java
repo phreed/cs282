@@ -7,6 +7,7 @@ import java.net.URL;
 
 import android.app.ProgressDialog;
 import android.content.res.AssetManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -76,12 +77,12 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	static private final String TAG = "Threaded Download Activity";
 
 	/** my oldest daughter */
-	static private final String DEFAULT_IMAGE = "raquel_eisele_2012.jpg";
-
-	private final Handler handler = new Handler();
+	static private final String DEFAULT_PORT_IMAGE = "raquel_eisele_port_2012.jpg";
+	static private final String DEFAULT_LAND_IMAGE = "raquel_eisele_land_2012.jpg";
 
 	private EditText urlEditText = null;
 	private ImageView image = null;
+	private Bitmap bitmapImage = null;
 	private ProgressDialog progress;
 
 	private static Handler msgHandler = null;
@@ -98,14 +99,19 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 		this.urlEditText = (EditText) findViewById(R.id.edit_image_url);
 		this.image = (ImageView) findViewById(R.id.current_image);
 
-		this.resetImage(null);
-
+		final Object obj = getLastNonConfigurationInstance();
+		if (obj == null) {
+			this.resetImage(null);
+		} else {
+			this.bitmapImage = (Bitmap) obj;
+			this.image.setImageBitmap(this.bitmapImage);
+		}
 		ThreadedDownloadActivity.msgHandler = initMsgHandler(this);
 	}
 
 	@Override
 	public Object onRetainNonConfigurationInstance() {
-		return handler;
+		return this.bitmapImage;
 	}
 
 	@Override
@@ -127,16 +133,22 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 		final AssetManager am = this.getAssets();
 		final InputStream is;
 		try {
-			is = am.open(DEFAULT_IMAGE);
+			switch (this.getResources().getConfiguration().orientation) {
+			case Configuration.ORIENTATION_LANDSCAPE:
+				is = am.open(DEFAULT_LAND_IMAGE);
+				break;
+			default:
+				is = am.open(DEFAULT_PORT_IMAGE);
+			}
 		} catch (IOException ex) {
 			Toast.makeText(this, R.string.error_opening_default_image,
 					Toast.LENGTH_LONG).show();
 			return;
 		}
-		final Bitmap bm;
 		try {
-			bm = BitmapFactory.decodeStream(is);
-			this.image.setImageBitmap(bm);
+			this.bitmapImage = null;
+			final Bitmap bitmap = BitmapFactory.decodeStream(is);
+			this.image.setImageBitmap(bitmap);
 		} finally {
 			try {
 				is.close();
@@ -144,7 +156,6 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 
 			}
 		}
-
 	}
 
 	/**
@@ -276,6 +287,7 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 			 */
 			@Override
 			protected void onPostExecute(Bitmap result) {
+				parent.bitmapImage = result;
 				if (result != null) {
 					parent.image.setImageBitmap(result);
 				}
@@ -312,17 +324,16 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 			private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
 
 			public void run() {
-				final Bitmap bitmap;
 				try {
-					bitmap = parent.downloadBitmap(url);
+					parent.bitmapImage = parent.downloadBitmap(url);
 				} catch (FailedDownload ex) {
-					parent.handler.post(new InvalidUriRunnable(parent, ex.msg));
+					parent.image.post(new InvalidUriRunnable(parent, ex.msg));
 					return;
 				}
-				parent.handler.post(new Runnable() {
+				parent.image.post(new Runnable() {
 					public void run() {
-						if (bitmap != null) {
-							parent.image.setImageBitmap(bitmap);
+						if (parent.bitmapImage != null) {
+							parent.image.setImageBitmap(parent.bitmapImage);
 						}
 						if (parent.progress.isShowing()) {
 							parent.progress.dismiss();
@@ -338,11 +349,20 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	 * The valid message types for the handler.
 	 */
 	protected static enum DownloadState {
-		/** indicate that the download is in progress and the progress spinner should be displayed */
+		/**
+		 * indicate that the download is in progress and the progress spinner
+		 * should be displayed
+		 */
 		SET_PROGRESS_VISIBILITY,
-		/** indicate that the download is complete and so the bitmap should be displayed */
+		/**
+		 * indicate that the download is complete and so the bitmap should be
+		 * displayed
+		 */
 		SET_BITMAP,
-		/** indicate that the download has failed and so the default image should be shown */
+		/**
+		 * indicate that the download has failed and so the default image should
+		 * be shown
+		 */
 		SET_ERROR;
 
 		static DownloadState[] lookup = DownloadState.values();
@@ -365,17 +385,16 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 						ProgressDialog.STYLE_SPINNER);
 				handler.sendMessage(startMsg);
 
-				final Bitmap bitmap;
 				try {
-					bitmap = parent.downloadBitmap(url);
+					parent.bitmapImage = parent.downloadBitmap(url);
 				} catch (FailedDownload ex) {
-					final Message errorMsg = handler.obtainMessage(DownloadState.SET_ERROR.ordinal(),
-							ex.msg);
+					final Message errorMsg = handler.obtainMessage(
+							DownloadState.SET_ERROR.ordinal(), ex.msg);
 					handler.sendMessage(errorMsg);
 					return;
 				}
-				final Message bitmapMsg = handler.obtainMessage(DownloadState.SET_BITMAP.ordinal(),
-						bitmap);
+				final Message bitmapMsg = handler.obtainMessage(
+						DownloadState.SET_BITMAP.ordinal(), parent.bitmapImage);
 				handler.sendMessage(bitmapMsg);
 			}
 		});
@@ -397,9 +416,9 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 				}
 					break;
 				case SET_BITMAP: {
-					final Bitmap bitmap = (Bitmap) msg.obj;
-					if (bitmap != null) {
-						parent.image.setImageBitmap(bitmap);
+					parent.bitmapImage = (Bitmap) msg.obj;
+					if (parent.bitmapImage != null) {
+						parent.image.setImageBitmap(parent.bitmapImage);
 					}
 					if (parent.progress.isShowing()) {
 						parent.progress.dismiss();
