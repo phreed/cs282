@@ -1,36 +1,61 @@
 package edu.vanderbilt.cs282.feisele;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 /**
  * An abstract activity which logs the life-cycle call backs.
  * A decorator pattern implemented via inheritance.
  */
-public abstract class LifecycleLoggingActivity extends FragmentActivity {
-	static private final String TAG = "Lifecycle Logging Activity";
+public abstract class LifecycleLoggingFragment extends Fragment {
+	static private final String TAG = "Lifecycle Logging Fragment";
 
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		Log.d(TAG, "onAttach: fragment attached "+activity.toString());
+	}
+	
+	@Override
+	public void onDetach() {
+		super.onDetach();
+		Log.d(TAG, "onDetach: fragment detach");
+	}
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d(TAG, "onCreate: activity rebuilt");
+		Log.d(TAG, "onCreate: fragment rebuilt");
 		if (savedInstanceState == null) {
-			Log.d(TAG, "onCreate: activity created fresh");
+			Log.d(TAG, "onCreate: fragment created fresh");
         } else {
-        	Log.d(TAG, "onCreate: activity restarted");
+        	Log.d(TAG, "onCreate: fragment restarted");
         }
 	}
-
+	
 	@Override
-	public void onRestoreInstanceState(Bundle savedInstanceState) {
-		super.onRestoreInstanceState(savedInstanceState);
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		Log.d(TAG, "onCreateView: fragment rebuilt");
 		if (savedInstanceState == null) {
-			Log.d(TAG, "onRestoreInstanceState: activity created fresh");
+			Log.d(TAG, "onCreateView: fragment created fresh");
         } else {
-        	Log.d(TAG, "onRestoreInstanceState: activity restarted");
+        	Log.d(TAG, "onCreateView: fragment restarted");
         }
+		// super.onCreateView(inflater, container, savedInstanceState);
+		return null;
+	}
+	
+	@Override
+	public void onDestroyView() {
+		super.onDestroyView();
+		Log.d(TAG, "onDestroyView: fragment view destroyed");
 	}
 
 	@Override
@@ -68,11 +93,11 @@ public abstract class LifecycleLoggingActivity extends FragmentActivity {
 		super.onDestroy();
 		Log.d(TAG, "onDestroy");
 	}
-
+	
 	@Override
-	public void onRestart() {
-		super.onRestart();
-		Log.d(TAG, "onRestart");
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		Log.d(TAG, "onActivityCreated: fragment activity created ");
 	}
 	
 	@Override

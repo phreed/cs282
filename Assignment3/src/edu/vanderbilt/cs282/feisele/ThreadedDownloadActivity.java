@@ -1,24 +1,16 @@
 package edu.vanderbilt.cs282.feisele;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import android.app.ProgressDialog;
-import android.content.res.AssetManager;
-import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
+import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.text.Editable;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 /**
@@ -76,17 +68,9 @@ import android.widget.Toast;
 public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	static private final String TAG = "Threaded Download Activity";
 
-	/** my oldest daughter */
-	static private final String DEFAULT_PORT_IMAGE = "raquel_eisele_port_2012.jpg";
-	static private final String DEFAULT_LAND_IMAGE = "raquel_eisele_land_2012.jpg";
-
 	private EditText urlEditText = null;
-	private ImageView image = null;
-	private Bitmap bitmapImage = null;
-	private ProgressDialog progress;
 
-	private static Handler msgHandler = null;
-
+	private ThreadedDownloadFragment imageFragment = null;
 	/**
 	 * 
 	 * @param savedInstanceState
@@ -94,24 +78,17 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_threaded_download);
+		setContentView(R.layout.threaded_download);
 
 		this.urlEditText = (EditText) findViewById(R.id.edit_image_url);
-		this.image = (ImageView) findViewById(R.id.current_image);
 
-		final Object obj = getLastNonConfigurationInstance();
-		if (obj == null) {
-			this.resetImage(null);
-		} else {
-			this.bitmapImage = (Bitmap) obj;
-			this.image.setImageBitmap(this.bitmapImage);
+		final FragmentManager fm = this.getSupportFragmentManager();
+		if (fm.findFragmentById(R.id.fragment_container) == null) {
+			final FragmentTransaction txn = fm.beginTransaction();
+			this.imageFragment = new ThreadedDownloadFragment();
+			txn.add(R.id.fragment_container, this.imageFragment);
+			txn.commit();
 		}
-		ThreadedDownloadActivity.msgHandler = initMsgHandler(this);
-	}
-
-	@Override
-	public Object onRetainNonConfigurationInstance() {
-		return this.bitmapImage;
 	}
 
 	@Override
@@ -122,40 +99,6 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	@Override
 	public void onPause() {
 		super.onPause();
-	}
-
-	/**
-	 * Load the default image from the assets.
-	 * 
-	 * @param view
-	 */
-	public void resetImage(View view) {
-		final AssetManager am = this.getAssets();
-		final InputStream is;
-		try {
-			switch (this.getResources().getConfiguration().orientation) {
-			case Configuration.ORIENTATION_LANDSCAPE:
-				is = am.open(DEFAULT_LAND_IMAGE);
-				break;
-			default:
-				is = am.open(DEFAULT_PORT_IMAGE);
-			}
-		} catch (IOException ex) {
-			Toast.makeText(this, R.string.error_opening_default_image,
-					Toast.LENGTH_LONG).show();
-			return;
-		}
-		try {
-			this.bitmapImage = null;
-			final Bitmap bitmap = BitmapFactory.decodeStream(is);
-			this.image.setImageBitmap(bitmap);
-		} finally {
-			try {
-				is.close();
-			} catch (IOException ex) {
-
-			}
-		}
 	}
 
 	/**
@@ -197,13 +140,13 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	/**
 	 * Indicate that the specified URL cannot be down loaded.
 	 */
-	private static class InvalidUriRunnable implements Runnable {
+	public static class InvalidUriRunnable implements Runnable {
 		final private ThreadedDownloadActivity parent;
 		final private CharSequence msg;
 
-		public InvalidUriRunnable(ThreadedDownloadActivity parent,
+		public InvalidUriRunnable(Activity parent,
 				CharSequence msg) {
-			this.parent = parent;
+			this.parent = (ThreadedDownloadActivity) parent;
 			this.msg = msg;
 		}
 
@@ -213,49 +156,16 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 		}
 	}
 
-	private static class FailedDownload extends Exception {
-		private static final long serialVersionUID = 6673968049922918951L;
-
-		final public CharSequence msg;
-
-		public FailedDownload(CharSequence msg) {
-			super();
-			this.msg = msg;
-		}
-	}
-
 	/**
-	 * Download the provided image url. If there is a problem an exception is
-	 * raised and the calling method is expected to handle it in an appropriate
-	 * manner.
+	 * Load the default image from the assets.
 	 * 
 	 * @param view
-	 *            the button view object (unused)
 	 */
-	private Bitmap downloadBitmap(URL url) throws FailedDownload {
-		try {
-			final InputStream is = url.openConnection().getInputStream();
-			return BitmapFactory.decodeStream(is);
-		} catch (IOException e) {
-			throw new FailedDownload(this.getResources().getText(
-					R.string.error_downloading_url));
-		}
+	public void resetImage(View view) {
+		if (this.imageFragment == null) return;
+		this.imageFragment.resetImage(view);
 	}
-
-	/**
-	 * Initialize and configure the progress dialog.
-	 * 
-	 */
-	private void startProgress() {
-		this.progress = new ProgressDialog(this);
-		this.progress.setTitle(R.string.dialog_progress_title);
-		this.progress.setMessage(this.getResources().getText(
-				R.string.message_progress_start));
-		this.progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-		this.progress.setProgress(0);
-		this.progress.show();
-	}
-
+	
 	/**
 	 * The async task will be stopped if the enclosing activity is stopped. In
 	 * general the intent service should be used for downloading from the
@@ -264,175 +174,21 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	 * @param view
 	 */
 	public void runAsyncTask(View view) {
-
-		final AsyncTask<URL, Void, Bitmap> task = new AsyncTask<URL, Void, Bitmap>() {
-			private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
-
-			@Override
-			protected Bitmap doInBackground(URL... params) {
-				for (final URL url : params) {
-					try {
-						return parent.downloadBitmap(url);
-					} catch (FailedDownload ex) {
-						parent.runOnUiThread(new InvalidUriRunnable(parent,
-								ex.msg));
-						return null;
-					}
-				}
-				return null;
-			}
-
-			/**
-			 * Set the downloaded image.
-			 */
-			@Override
-			protected void onPostExecute(Bitmap result) {
-				parent.bitmapImage = result;
-				if (result != null) {
-					parent.image.setImageBitmap(result);
-				}
-				if (parent.progress.isShowing()) {
-					parent.progress.dismiss();
-				}
-			}
-
-			@Override
-			protected void onPreExecute() {
-				parent.startProgress();
-			}
-
-			@Override
-			protected void onProgressUpdate(Void... values) {
-			}
-		};
+		if (this.imageFragment == null) return;
 		final URL url = getValidUrlFromWidget();
-		if (url != null)
-			task.execute(url);
+		this.imageFragment.runAsyncTask(view, url);
 	}
-
-	/**
-	 * Start a new thread to perform the download. Once the download is
-	 * completed the UI thread is notified via a post to on the handler.
-	 * 
-	 * @param view
-	 */
-	public void runRunnable(View view) {
-		this.startProgress();
-		final URL url = getValidUrlFromWidget();
-
-		final Thread thread = new Thread(null, new Runnable() {
-			private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
-
-			public void run() {
-				try {
-					parent.bitmapImage = parent.downloadBitmap(url);
-				} catch (FailedDownload ex) {
-					parent.image.post(new InvalidUriRunnable(parent, ex.msg));
-					return;
-				}
-				parent.image.post(new Runnable() {
-					public void run() {
-						if (parent.bitmapImage != null) {
-							parent.image.setImageBitmap(parent.bitmapImage);
-						}
-						if (parent.progress.isShowing()) {
-							parent.progress.dismiss();
-						}
-					}
-				});
-			}
-		});
-		thread.start();
-	}
-
-	/**
-	 * The valid message types for the handler.
-	 */
-	protected static enum DownloadState {
-		/**
-		 * indicate that the download is in progress and the progress spinner
-		 * should be displayed
-		 */
-		SET_PROGRESS_VISIBILITY,
-		/**
-		 * indicate that the download is complete and so the bitmap should be
-		 * displayed
-		 */
-		SET_BITMAP,
-		/**
-		 * indicate that the download has failed and so the default image should
-		 * be shown
-		 */
-		SET_ERROR;
-
-		static DownloadState[] lookup = DownloadState.values();
-	}
-
-	/**
-	 * Make use of the message handler to keep the UI updated.
-	 * 
-	 */
+	
 	public void runMessages(View view) {
+		if (this.imageFragment == null) return;
 		final URL url = getValidUrlFromWidget();
-
-		final Thread thread = new Thread(null, new Runnable() {
-			private final ThreadedDownloadActivity parent = ThreadedDownloadActivity.this;
-			private final Handler handler = ThreadedDownloadActivity.msgHandler;
-
-			public void run() {
-				final Message startMsg = handler.obtainMessage(
-						DownloadState.SET_PROGRESS_VISIBILITY.ordinal(),
-						ProgressDialog.STYLE_SPINNER);
-				handler.sendMessage(startMsg);
-
-				try {
-					parent.bitmapImage = parent.downloadBitmap(url);
-				} catch (FailedDownload ex) {
-					final Message errorMsg = handler.obtainMessage(
-							DownloadState.SET_ERROR.ordinal(), ex.msg);
-					handler.sendMessage(errorMsg);
-					return;
-				}
-				final Message bitmapMsg = handler.obtainMessage(
-						DownloadState.SET_BITMAP.ordinal(), parent.bitmapImage);
-				handler.sendMessage(bitmapMsg);
-			}
-		});
-		thread.start();
+		this.imageFragment.runMessages(view, url);
 	}
-
-	/**
-	 * Initialized the handler used by the run message method.
-	 * 
-	 * @return
-	 */
-	private static Handler initMsgHandler(final ThreadedDownloadActivity parent) {
-		return new Handler() {
-			@Override
-			public void handleMessage(Message msg) {
-				switch (DownloadState.lookup[msg.what]) {
-				case SET_PROGRESS_VISIBILITY: {
-					parent.startProgress();
-				}
-					break;
-				case SET_BITMAP: {
-					parent.bitmapImage = (Bitmap) msg.obj;
-					if (parent.bitmapImage != null) {
-						parent.image.setImageBitmap(parent.bitmapImage);
-					}
-					if (parent.progress.isShowing()) {
-						parent.progress.dismiss();
-					}
-				}
-					break;
-				case SET_ERROR: {
-					final CharSequence errorMsg = (CharSequence) msg.obj;
-					parent.urlEditText.setError(errorMsg);
-					Toast.makeText(parent, errorMsg, Toast.LENGTH_LONG).show();
-				}
-					break;
-				}
-			}
-		};
+	
+	public void runRunnable(View view) {
+		if (this.imageFragment == null) return;
+		final URL url = getValidUrlFromWidget();
+		this.imageFragment.runRunnable(view, url);
 	}
+	
 }

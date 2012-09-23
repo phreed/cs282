@@ -24,7 +24,7 @@
         android:id="@+id/inputs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal" >
 
         <Button
             android:id="@+id/run_runnable"
@@ -51,9 +51,9 @@
             android:text="@string/label_reset_image" />
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/current_image"
-        style="@style/Image.Style"
-        android:contentDescription="@string/describe_image" />
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </LinearLayout>
