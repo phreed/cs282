@@ -5,6 +5,7 @@ import java.net.URL;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.text.Editable;
@@ -83,11 +84,14 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 		this.urlEditText = (EditText) findViewById(R.id.edit_image_url);
 
 		final FragmentManager fm = this.getSupportFragmentManager();
-		if (fm.findFragmentById(R.id.fragment_container) == null) {
+		final Fragment fobj = fm.findFragmentById(R.id.fragment_container);
+		if (fobj == null) {
 			final FragmentTransaction txn = fm.beginTransaction();
 			this.imageFragment = new ThreadedDownloadFragment();
 			txn.add(R.id.fragment_container, this.imageFragment);
 			txn.commit();
+		} else {
+			this.imageFragment = (ThreadedDownloadFragment) fobj;
 		}
 	}
 

@@ -145,6 +145,26 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	}
 
 	/**
+	 * A new bitmap image has been generated. Update the
+	 * 
+	 * @param result
+	 */
+	private void setBitmap(Bitmap result) {
+		try {
+			if (result != null) {
+				this.defaultImage = false;
+				this.bitmap = result;
+				this.bitmapImage.setImageBitmap(this.bitmap);
+			}
+			if (this.progress.isShowing()) {
+				this.progress.dismiss();
+			}
+		} catch (IllegalArgumentException ex) {
+
+		}
+	}
+
+	/**
 	 * The async task will be stopped if the enclosing activity is stopped. In
 	 * general the intent service should be used for downloading from the
 	 * internet.
@@ -176,15 +196,7 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 			 */
 			@Override
 			protected void onPostExecute(Bitmap result) {
-				master.bitmap = result;
-				if (result != null) {
-					master.defaultImage = false;
-					master.bitmap = result;
-					master.bitmapImage.setImageBitmap(master.bitmap);
-				}
-				if (master.progress.isShowing()) {
-					master.progress.dismiss();
-				}
+				master.setBitmap(result);
 			}
 
 			@Override
@@ -215,8 +227,9 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 			final URL url_ = url;
 
 			public void run() {
+				final Bitmap bitmap;
 				try {
-					master.bitmap = master.downloadBitmap(url_);
+					bitmap = master.downloadBitmap(url_);
 				} catch (FailedDownload ex) {
 					// master.bitmapImage.post(new InvalidUriRunnable(master,
 					// ex.msg));
@@ -224,13 +237,7 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 				}
 				master.bitmapImage.post(new Runnable() {
 					public void run() {
-						if (master.bitmap != null) {
-							master.defaultImage = false;
-							master.bitmapImage.setImageBitmap(master.bitmap);
-						}
-						if (master.progress.isShowing()) {
-							master.progress.dismiss();
-						}
+						master.setBitmap(bitmap);
 					}
 				});
 			}
@@ -278,8 +285,9 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 						ProgressDialog.STYLE_SPINNER);
 				handler.sendMessage(startMsg);
 
+				final Bitmap bitmap;
 				try {
-					master.bitmap = master.downloadBitmap(url_);
+					bitmap = master.downloadBitmap(url_);
 				} catch (FailedDownload ex) {
 					final Message errorMsg = handler.obtainMessage(
 							DownloadState.SET_ERROR.ordinal(), ex.msg);
@@ -287,7 +295,7 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 					return;
 				}
 				final Message bitmapMsg = handler.obtainMessage(
-						DownloadState.SET_BITMAP.ordinal(), master.bitmap);
+						DownloadState.SET_BITMAP.ordinal(), bitmap);
 				handler.sendMessage(bitmapMsg);
 			}
 		});
@@ -310,18 +318,13 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 				}
 					break;
 				case SET_BITMAP: {
-					master.bitmap = (Bitmap) msg.obj;
-					if (master.bitmap != null) {
-						master.defaultImage = false;
-						master.bitmapImage.setImageBitmap(master.bitmap);
-					}
-					if (master.progress.isShowing()) {
-						master.progress.dismiss();
-					}
+					final Bitmap bitmap = (Bitmap) msg.obj;
+					master.setBitmap(bitmap);
 				}
 					break;
 				case SET_ERROR: {
 					final CharSequence errorMsg = (CharSequence) msg.obj;
+					// FIXME
 					// master.urlEditText.setError(errorMsg);
 					Toast.makeText(master.getActivity(), errorMsg,
 							Toast.LENGTH_LONG).show();
