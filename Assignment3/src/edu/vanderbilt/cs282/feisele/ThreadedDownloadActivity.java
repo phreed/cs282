@@ -13,7 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
-import edu.vanderbilt.cs282.feisele.ThreadedDownloadFragment.OnDownloadFault;
+import edu.vanderbilt.cs282.feisele.ThreadedDownloadFragment.OnDownloadFaultHandler;
 
 /**
  * 
@@ -68,7 +68,7 @@ import edu.vanderbilt.cs282.feisele.ThreadedDownloadFragment.OnDownloadFault;
  * 
  */
 public class ThreadedDownloadActivity extends LifecycleLoggingActivity
-		implements OnDownloadFault {
+		implements OnDownloadFaultHandler {
 	static private final String TAG = "Threaded Download Activity";
 
 	private EditText urlEditText = null;
@@ -200,6 +200,8 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity
 			final ThreadedDownloadActivity master = ThreadedDownloadActivity.this;
 
 			public void run() {
+				Toast.makeText(master, msg, Toast.LENGTH_LONG).show();
+				
 				final Drawable dr = master.getResources().getDrawable(
 						R.drawable.indicator_input_warn);
 				dr.setBounds(0, 0, dr.getIntrinsicWidth(),

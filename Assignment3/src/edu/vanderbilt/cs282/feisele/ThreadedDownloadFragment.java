@@ -34,7 +34,7 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	private static Handler msgHandler = null;
 	private ProgressDialog progress;
 
-	public interface OnDownloadFault {
+	public interface OnDownloadFaultHandler {
 		public void onFault(CharSequence msg);
 	}
 
@@ -62,10 +62,12 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 		final View result = inflater.inflate(R.layout.downloaded_image,
 				container, false);
 		this.bitmapImage = (ImageView) result.findViewById(R.id.current_image);
-		if (this.bitmap == null) {
-			this.resetImage(null);
-		} else {
-			this.bitmapImage.setImageBitmap(this.bitmap);
+		synchronized (this) {
+			if (this.bitmap == null) {
+				this.resetImage(null);
+			} else {
+				this.bitmapImage.setImageBitmap(this.bitmap);
+			}
 		}
 		return result;
 	}
@@ -77,7 +79,6 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	 * @param view
 	 */
 	public void resetImage(View view) {
-		this.bitmap = null;
 
 		final AssetManager am = this.getActivity().getAssets();
 		final InputStream is;
@@ -96,8 +97,11 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 			return;
 		}
 		try {
-			final Bitmap bitmap = BitmapFactory.decodeStream(is);
-			this.bitmapImage.setImageBitmap(bitmap);
+			synchronized (this) {
+				this.bitmap = null;
+				final Bitmap bitmap = BitmapFactory.decodeStream(is);
+				this.bitmapImage.setImageBitmap(bitmap);
+			}
 		} finally {
 			try {
 				is.close();
@@ -108,10 +112,9 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	}
 
 	/**
-	 * The workhorse for the class.
-	 * Download the provided image url. If there is a problem an exception is
-	 * raised and the calling method is expected to handle it in an appropriate
-	 * manner.
+	 * The workhorse for the class. Download the provided image url. If there is
+	 * a problem an exception is raised and the calling method is expected to
+	 * handle it in an appropriate manner.
 	 * 
 	 * @param view
 	 *            the button view object (unused)
@@ -140,7 +143,6 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 		}
 	}
 
-
 	/**
 	 * Initialize and configure the progress dialog.
 	 * 
@@ -163,9 +165,11 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	 */
 	private void setBitmap(Bitmap result) {
 		try {
-			this.bitmap = result;
-			if (this.bitmap != null) {
-				this.bitmapImage.setImageBitmap(this.bitmap);
+			synchronized (this) {
+				this.bitmap = result;
+				if (this.bitmap != null) {
+					this.bitmapImage.setImageBitmap(this.bitmap);
+				}
 			}
 			if (this.progress.isShowing()) {
 				this.progress.dismiss();
@@ -180,14 +184,13 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	 * 
 	 * @param errorMsg
 	 */
-	private void reportDownloadFault(CharSequence errorMsg) {
+	private void reportDownloadFault(CharSequence errorMsg) {	
 		final FragmentActivity parent = this.getActivity();
 
-		Toast.makeText(parent, errorMsg, Toast.LENGTH_LONG).show();
-
-		if (parent instanceof OnDownloadFault) {
-			((OnDownloadFault) parent).onFault(errorMsg);
+		if (parent instanceof OnDownloadFaultHandler) {
+			((OnDownloadFaultHandler) parent).onFault(errorMsg);
 		}
+		this.progress.cancel();
 	}
 
 	/**
