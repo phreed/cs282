@@ -13,13 +13,13 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
-import edu.vanderbilt.cs282.feisele.ThreadedDownloadActivity.InvalidUriRunnable;
 
 public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	static private final String TAG = "Threaded Download Fragment";
@@ -28,12 +28,15 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	static private final String DEFAULT_PORT_IMAGE = "raquel_eisele_port_2012.jpg";
 	static private final String DEFAULT_LAND_IMAGE = "raquel_eisele_land_2012.jpg";
 
-	private boolean defaultImage = true;
 	private Bitmap bitmap = null;
 	private ImageView bitmapImage = null;
-	private static Handler msgHandler = null;
 
+	private static Handler msgHandler = null;
 	private ProgressDialog progress;
+
+	public interface OnDownloadFault {
+		public void onFault(CharSequence msg);
+	}
 
 	/**
 	 * 
@@ -42,10 +45,14 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		ThreadedDownloadFragment.msgHandler = initMsgHandler(this);
 	}
 
+	/**
+	 * The bitmap field serves double duty. It serves to hold the downloaded
+	 * bitmap image and, when null, it acts as a flag to indicate that the
+	 * default image should be used.
+	 */
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -55,33 +62,22 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 		final View result = inflater.inflate(R.layout.downloaded_image,
 				container, false);
 		this.bitmapImage = (ImageView) result.findViewById(R.id.current_image);
-		if (this.defaultImage) {
+		if (this.bitmap == null) {
 			this.resetImage(null);
 		} else {
 			this.bitmapImage.setImageBitmap(this.bitmap);
 		}
-
 		return result;
 	}
 
-	/* package */static class FailedDownload extends Exception {
-		private static final long serialVersionUID = 6673968049922918951L;
-
-		final public CharSequence msg;
-
-		public FailedDownload(CharSequence msg) {
-			super();
-			this.msg = msg;
-		}
-	}
-
 	/**
-	 * Load the default image from the assets.
+	 * Load the default image from the assets. Just for fun a different asset is
+	 * loaded depending on the screen orientation.
 	 * 
 	 * @param view
 	 */
 	public void resetImage(View view) {
-		this.defaultImage = true;
+		this.bitmap = null;
 
 		final AssetManager am = this.getActivity().getAssets();
 		final InputStream is;
@@ -100,18 +96,19 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 			return;
 		}
 		try {
-			this.bitmap = BitmapFactory.decodeStream(is);
-			this.bitmapImage.setImageBitmap(this.bitmap);
+			final Bitmap bitmap = BitmapFactory.decodeStream(is);
+			this.bitmapImage.setImageBitmap(bitmap);
 		} finally {
 			try {
 				is.close();
 			} catch (IOException ex) {
-
+				Log.e(TAG, "cannot load a bitmap asset");
 			}
 		}
 	}
 
 	/**
+	 * The workhorse for the class.
 	 * Download the provided image url. If there is a problem an exception is
 	 * raised and the calling method is expected to handle it in an appropriate
 	 * manner.
@@ -128,6 +125,21 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 					R.string.error_downloading_url));
 		}
 	}
+
+	/**
+	 * An exception class used when there is a problem with the download.
+	 */
+	/* package */static class FailedDownload extends Exception {
+		private static final long serialVersionUID = 6673968049922918951L;
+
+		final public CharSequence msg;
+
+		public FailedDownload(CharSequence msg) {
+			super();
+			this.msg = msg;
+		}
+	}
+
 
 	/**
 	 * Initialize and configure the progress dialog.
@@ -151,16 +163,30 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	 */
 	private void setBitmap(Bitmap result) {
 		try {
-			if (result != null) {
-				this.defaultImage = false;
-				this.bitmap = result;
+			this.bitmap = result;
+			if (this.bitmap != null) {
 				this.bitmapImage.setImageBitmap(this.bitmap);
 			}
 			if (this.progress.isShowing()) {
 				this.progress.dismiss();
 			}
 		} catch (IllegalArgumentException ex) {
+			Log.e(TAG, "can not set bitmap image");
+		}
+	}
 
+	/**
+	 * Report problems with downloading the image back to the parent activity.
+	 * 
+	 * @param errorMsg
+	 */
+	private void reportDownloadFault(CharSequence errorMsg) {
+		final FragmentActivity parent = this.getActivity();
+
+		Toast.makeText(parent, errorMsg, Toast.LENGTH_LONG).show();
+
+		if (parent instanceof OnDownloadFault) {
+			((OnDownloadFault) parent).onFault(errorMsg);
 		}
 	}
 
@@ -173,20 +199,20 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	 */
 	public void runAsyncTask(View view, URL url) {
 		Log.d(TAG, "runAsyncTask");
-		final AsyncTask<URL, Void, Bitmap> task = new AsyncTask<URL, Void, Bitmap>() {
+		if (url == null)
+			return;
+		(new AsyncTask<URL, Void, Bitmap>() {
 			private final ThreadedDownloadFragment master = ThreadedDownloadFragment.this;
 
 			@Override
 			protected Bitmap doInBackground(URL... params) {
-				for (final URL url : params) {
-					try {
-						return master.downloadBitmap(url);
-					} catch (FailedDownload ex) {
-						final InvalidUriRunnable error = new InvalidUriRunnable(
-								master.getActivity(), ex.msg);
-						master.getActivity().runOnUiThread(error);
-						return null;
-					}
+				if (params.length < 1)
+					return null;
+				final URL url = params[0];
+				try {
+					return master.downloadBitmap(url);
+				} catch (FailedDownload ex) {
+					master.reportDownloadFault(ex.msg);
 				}
 				return null;
 			}
@@ -201,14 +227,11 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 
 			@Override
 			protected void onPreExecute() {
-				master.startProgress(master.getActivity().getResources()
-						.getText(R.string.message_progress_async_task));
+				master.startProgress(master.getResources().getText(
+						R.string.message_progress_async_task));
 			}
 
-		};
-
-		if (url != null)
-			task.execute(url);
+		}).execute(url);
 	}
 
 	/**
@@ -219,10 +242,12 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	 */
 	public void runRunnable(View view, final URL url) {
 		Log.d(TAG, "runRunnable");
-		this.startProgress(this.getActivity().getResources()
-				.getText(R.string.message_progress_run_runnable));
+		if (url == null)
+			return;
+		this.startProgress(this.getResources().getText(
+				R.string.message_progress_run_runnable));
 
-		final Thread thread = new Thread(null, new Runnable() {
+		(new Thread(null, new Runnable() {
 			private final ThreadedDownloadFragment master = ThreadedDownloadFragment.this;
 			final URL url_ = url;
 
@@ -231,8 +256,7 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 				try {
 					bitmap = master.downloadBitmap(url_);
 				} catch (FailedDownload ex) {
-					// master.bitmapImage.post(new InvalidUriRunnable(master,
-					// ex.msg));
+					master.reportDownloadFault(ex.msg);
 					return;
 				}
 				master.bitmapImage.post(new Runnable() {
@@ -241,8 +265,7 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 					}
 				});
 			}
-		});
-		thread.start();
+		})).start();
 	}
 
 	/**
@@ -269,12 +292,46 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	}
 
 	/**
+	 * Initialized the handler used by the run message method.
+	 * 
+	 * @return
+	 */
+	private static Handler initMsgHandler(final ThreadedDownloadFragment master) {
+
+		return new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				switch (DownloadState.lookup[msg.what]) {
+				case SET_PROGRESS_VISIBILITY: {
+					master.startProgress(master.getResources().getText(
+							R.string.message_progress_run_messages));
+				}
+					break;
+				case SET_BITMAP: {
+					final Bitmap bitmap = (Bitmap) msg.obj;
+					master.setBitmap(bitmap);
+				}
+					break;
+				case SET_ERROR: {
+					master.reportDownloadFault((CharSequence) msg.obj);
+					break;
+				}
+				}
+			}
+		};
+	}
+
+	/**
 	 * Make use of the message handler to keep the UI updated.
 	 * 
 	 */
 	public void runMessages(View view, final URL url) {
 		Log.d(TAG, "runMessages");
-		final Thread thread = new Thread(null, new Runnable() {
+
+		if (url == null)
+			return;
+
+		(new Thread(null, new Runnable() {
 			private final ThreadedDownloadFragment master = ThreadedDownloadFragment.this;
 			private final Handler handler = ThreadedDownloadFragment.msgHandler;
 			private final URL url_ = url;
@@ -298,41 +355,7 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 						DownloadState.SET_BITMAP.ordinal(), bitmap);
 				handler.sendMessage(bitmapMsg);
 			}
-		});
-		thread.start();
-	}
-
-	/**
-	 * Initialized the handler used by the run message method.
-	 * 
-	 * @return
-	 */
-	private static Handler initMsgHandler(final ThreadedDownloadFragment master) {
-		return new Handler() {
-			@Override
-			public void handleMessage(Message msg) {
-				switch (DownloadState.lookup[msg.what]) {
-				case SET_PROGRESS_VISIBILITY: {
-					master.startProgress(master.getActivity().getResources()
-							.getText(R.string.message_progress_run_messages));
-				}
-					break;
-				case SET_BITMAP: {
-					final Bitmap bitmap = (Bitmap) msg.obj;
-					master.setBitmap(bitmap);
-				}
-					break;
-				case SET_ERROR: {
-					final CharSequence errorMsg = (CharSequence) msg.obj;
-					// FIXME
-					// master.urlEditText.setError(errorMsg);
-					Toast.makeText(master.getActivity(), errorMsg,
-							Toast.LENGTH_LONG).show();
-				}
-					break;
-				}
-			}
-		};
+		})).start();
 	}
 
 }

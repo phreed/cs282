@@ -3,7 +3,7 @@ package edu.vanderbilt.cs282.feisele;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import android.app.Activity;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
+import edu.vanderbilt.cs282.feisele.ThreadedDownloadFragment.OnDownloadFault;
 
 /**
  * 
@@ -66,13 +67,23 @@ import android.widget.Toast;
  * @author Fred Eisele <phreed@gmail.com>
  * 
  */
-public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
+public class ThreadedDownloadActivity extends LifecycleLoggingActivity
+		implements OnDownloadFault {
 	static private final String TAG = "Threaded Download Activity";
 
 	private EditText urlEditText = null;
 
 	private ThreadedDownloadFragment imageFragment = null;
+
 	/**
+	 * The fragment is used to preserve state across various changes.
+	 * <dl>
+	 * <dt>orientation</dt>
+	 * <dt>startActivity</dt>
+	 * <dd>configuration change doesn't handle properly</dt>
+	 * <dt>keyboard</dt>
+	 * </dl>
+	 * <p>
 	 * 
 	 * @param savedInstanceState
 	 */
@@ -142,57 +153,60 @@ public class ThreadedDownloadActivity extends LifecycleLoggingActivity {
 	}
 
 	/**
-	 * Indicate that the specified URL cannot be down loaded.
-	 */
-	public static class InvalidUriRunnable implements Runnable {
-		final private ThreadedDownloadActivity parent;
-		final private CharSequence msg;
-
-		public InvalidUriRunnable(Activity parent,
-				CharSequence msg) {
-			this.parent = (ThreadedDownloadActivity) parent;
-			this.msg = msg;
-		}
-
-		public void run() {
-			parent.urlEditText.setError(this.msg);
-			Toast.makeText(this.parent, this.msg, Toast.LENGTH_LONG).show();
-		}
-	}
-
-	/**
 	 * Load the default image from the assets.
 	 * 
 	 * @param view
 	 */
 	public void resetImage(View view) {
-		if (this.imageFragment == null) return;
+		if (this.imageFragment == null)
+			return;
 		this.imageFragment.resetImage(view);
 	}
-	
+
 	/**
-	 * The async task will be stopped if the enclosing activity is stopped. In
-	 * general the intent service should be used for downloading from the
-	 * internet.
+	 * Each of the following actions will make use of a background thread.
 	 * 
 	 * @param view
 	 */
 	public void runAsyncTask(View view) {
-		if (this.imageFragment == null) return;
+		if (this.imageFragment == null)
+			return;
 		final URL url = getValidUrlFromWidget();
 		this.imageFragment.runAsyncTask(view, url);
 	}
-	
+
 	public void runMessages(View view) {
-		if (this.imageFragment == null) return;
+		if (this.imageFragment == null)
+			return;
 		final URL url = getValidUrlFromWidget();
 		this.imageFragment.runMessages(view, url);
 	}
-	
+
 	public void runRunnable(View view) {
-		if (this.imageFragment == null) return;
+		if (this.imageFragment == null)
+			return;
 		final URL url = getValidUrlFromWidget();
 		this.imageFragment.runRunnable(view, url);
 	}
-	
+
+	/**
+	 * Should any of the downloads fail produce a warning indicator on the url
+	 * field. As this is most likely called from the background thread
+	 * performing the download the field update is forced to the ui thread.
+	 */
+	public void onFault(final CharSequence msg) {
+		this.runOnUiThread(new Runnable() {
+			final CharSequence msg_ = msg;
+			final ThreadedDownloadActivity master = ThreadedDownloadActivity.this;
+
+			public void run() {
+				final Drawable dr = master.getResources().getDrawable(
+						R.drawable.indicator_input_warn);
+				dr.setBounds(0, 0, dr.getIntrinsicWidth(),
+						dr.getIntrinsicHeight());
+				master.urlEditText.setError(msg_, dr);
+			}
+		});
+	}
+
 }
