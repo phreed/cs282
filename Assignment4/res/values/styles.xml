@@ -1,0 +1,33 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="AppTheme" parent="android:Theme.Light" />
+
+    <style name="Prompt.Style" parent="@android:style/Widget.TextView">
+        <item name="android:textColor">@color/prompt_text_color</item>
+        <item name="android:layout_margin">10dip</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="Url.EditText.Style" parent="@android:style/Widget.EditText">
+        <item name="android:textColor">@color/edit_text_color</item>
+        <item name="android:gravity">left</item>
+        <item name="android:layout_width">0dip</item>
+        <item name="android:layout_weight">50</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:inputType">textUri</item>
+    </style>
+     <style name="Button.Style" parent="@android:style/Widget.Button">
+        <item name="android:layout_width">0dip</item>
+         <item name="android:layout_weight">1</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:singleLine">false</item>
+        <item name="android:maxLines">2</item>
+    </style>
+     <style name="Image.Style" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">#543</item>
+    </style>
+
+</resources>
