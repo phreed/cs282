@@ -36,3 +36,10 @@ The loss is that more memory is consumed persisting the fragment.
 
 My daughter sent me new photos so I used them instead
 of those of our instructor.
+
+2012-09-25 Protect the bitmap from contention
+
+There is a slight possiblility that more than on thread may
+try to update the bitmap image concurrently.  To prevent this
+a synchronize block has been placed around the updates to 
+the bitmap items.
