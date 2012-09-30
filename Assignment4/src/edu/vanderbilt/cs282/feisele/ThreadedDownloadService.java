@@ -324,8 +324,9 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 				try {
 					final Bitmap bitmap = master.downloadBitmap(uri_);
 					final File bitmapFile = master.storeBitmap(bitmap);
+					final String bitmapFilePath = bitmapFile.getCanonicalPath();
 					pendingIntent.send(master, RESULT_BITMAP_ID,
-							new Intent().putExtra(RESULT_BITMAP_FILE, bitmapFile));
+							new Intent().putExtra(RESULT_BITMAP_FILE, bitmapFilePath));
 				} catch (FileNotFoundException ex) {
 					ex.printStackTrace();
 				} catch (FailedDownload ex) {

@@ -158,8 +158,12 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		}
 	}
 	
-	public void loadBitmap(String bitmapFileString) {
-		final File bitmapFile = new File(bitmapFileString);
+	public void loadBitmap(String bitmapFilePath) {
+		if (bitmapFilePath == null) {
+			Log.e(TAG, "null file path");
+			return;
+		}
+		final File bitmapFile = new File(bitmapFilePath);
 		this.loadBitmap(bitmapFile);
 	}
 
