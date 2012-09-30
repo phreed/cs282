@@ -1,45 +1,6 @@
-2012-09-19  Initial submission as Assignment3 for CS 282
+2012-09-29 Begin work, copied from Assignment 3
 
-2012-09-22  Addressed comments by Dr. Doug Schmidt
+2012-10-03 Initial submission as Assignment4 for CS 282
 
-"Can you use Java enums for the [message handling], which are more 'localized'":
-I make use of an enum using the ordinal to serialize the item.
+2012-10-05  Addressed comments by Professor Doug Schmidt
 
-"I don't really think it makes sense to use a loop [in the doInBackground]
-since it only ever iterates once, even in the failure case.  Am I missing something?"
-I typically use a for each in these cases as it saves a check on 
-the size of the list, but I made the change as indicated.
-
-"I think you can zap [the onProgressUpdate] method since you're now using it, right?"
-I sometimes provided @Override methods to indicate that they are 
-intentionally unchanged.  I have removed this method.
-However I have left a couple of empty methods in the main Activity.
-
-
-2012-09-25 Make use of the setError method on the URL edit field
-
-Enhance the error reporting by using the TextView.setError()
-method to indicate the incorrect URL.
-
-The download may fail for a number of reasons related to the network
-I decided to indicate these as warnings
-
-2012-09-23 Preseve state with fragments
-
-I had been wanting to learn how to use fragments anyway.
-The textbook recommends using fragments to preserve state.
-The main win is that leaving the activity and returning 
-will retain state using the fragment technique.
-The loss is that more memory is consumed persisting the fragment.
-
-2012-09-24 Replace default images 
-
-My daughter sent me new photos so I used them instead
-of those of our instructor.
-
-2012-09-25 Protect the bitmap from contention
-
-There is a slight possiblility that more than on thread may
-try to update the bitmap image concurrently.  To prevent this
-a synchronize block has been placed around the updates to 
-the bitmap items.

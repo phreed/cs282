@@ -22,6 +22,6 @@ project is prepared for submission as follows:
 Create a Zip archive that contains the contents of the latest commit on the current branch. 
 The output format is inferred by the extension of the output file.
 
-git archive -o /tmp/Assignment3.zip HEAD
+git archive -o /tmp/Assignment4.zip HEAD
 
 

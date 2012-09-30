@@ -29,20 +29,20 @@
         <Button
             android:id="@+id/run_runnable"
             style="@style/Button.Style"
-            android:onClick="runRunnable"
-            android:text="@string/label_run_runnable" />
+            android:onClick="runThreadWithPendingIntent"
+            android:text="@string/label_run_thread_w_pending_intent" />
 
         <Button
             android:id="@+id/run_messages"
             style="@style/Button.Style"
-            android:onClick="runMessages"
-            android:text="@string/label_run_messages" />
+            android:onClick="runThreadWithMessenger"
+            android:text="@string/label_run_thread_w_messenger" />
 
         <Button
             android:id="@+id/run_async_task"
             style="@style/Button.Style"
-            android:onClick="runAsyncTask"
-            android:text="@string/label_run_async_task" />
+            android:onClick="runAsyncTaskWithReceiver"
+            android:text="@string/label_run_async_task_w_receiver" />
 
         <Button
             android:id="@+id/reset_image"
