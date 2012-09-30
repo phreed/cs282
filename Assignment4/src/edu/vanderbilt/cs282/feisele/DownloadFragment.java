@@ -1,16 +1,16 @@
 package edu.vanderbilt.cs282.feisele;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 
 import android.app.ProgressDialog;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -126,8 +126,10 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 					this.bitmapImage.setImageBitmap(this.bitmap);
 				}
 			}
-			if (this.progress.isShowing()) {
-				this.progress.dismiss();
+			if (this.progress != null) {
+				if (this.progress.isShowing()) {
+					this.progress.dismiss();
+				}
 			}
 		} catch (IllegalArgumentException ex) {
 			Log.e(TAG, "can not set bitmap image");
@@ -135,18 +137,33 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	}
 
 	public void loadBitmap(ParcelFileDescriptor pfd) {
-		final InputStream fileStream = new FileInputStream(pfd.getFileDescriptor());
+		final InputStream fileStream = new FileInputStream(
+				pfd.getFileDescriptor());
 		final Bitmap bitmap = BitmapFactory.decodeStream(fileStream);
 		this.setBitmap(bitmap);
 	}
 
+	public void loadBitmap(File bitmapFile) {
+		if (bitmapFile == null) {
+			Log.e(TAG, "null file");
+			return;
+		}
+		InputStream fileStream;
+		try {
+			fileStream = new FileInputStream(bitmapFile);
+			final Bitmap bitmap = BitmapFactory.decodeStream(fileStream);
+			this.setBitmap(bitmap);
+		} catch (FileNotFoundException ex) {
+			Log.e(TAG, "could not load file " + bitmapFile, ex);
+		}
+	}
 
 	/**
 	 * Report problems with downloading the image back to the parent activity.
 	 * 
 	 * @param errorMsg
 	 */
-	private void reportDownloadFault(CharSequence errorMsg) {	
+	private void reportDownloadFault(CharSequence errorMsg) {
 		final FragmentActivity parent = this.getActivity();
 
 		if (parent instanceof OnDownloadFaultHandler) {
@@ -154,8 +171,6 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		}
 		this.progress.cancel();
 	}
-
-
 
 	/**
 	 * The valid message types for the handler.
@@ -192,8 +207,8 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 			public void handleMessage(Message msg) {
 				switch (DownloadState.lookup[msg.what]) {
 				case SET_PROGRESS_VISIBILITY: {
-					//master.startProgress(master.getResources().getText(
-					//		R.string.message_progress_run_messages));
+					// master.startProgress(master.getResources().getText(
+					// R.string.message_progress_run_messages));
 				}
 					break;
 				case SET_BITMAP: {
@@ -209,6 +224,5 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 			}
 		};
 	}
-
 
 }

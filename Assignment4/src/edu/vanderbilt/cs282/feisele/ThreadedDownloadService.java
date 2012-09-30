@@ -34,7 +34,7 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 	static public final String BROADCAST_INTENT_ACTION = "edu.vanderbilt.cs282.feisele.DOWNLOAD_COMPLETE_ACTION";
 	static public final String MESSENGER_KEY = "edu.vanderbilt.cs282.feisele.broadcast_intent";
 	static public final int RESULT_BITMAP_ID = 12;
-	static public final String RESULT_BITMAP_FD = "edu.vanderbilt.cs282.feisele.bitmap_file_descriptor";
+	static public final String RESULT_BITMAP_FILE = "edu.vanderbilt.cs282.feisele.bitmap_file_descriptor";
 
 	static public final int MAXIMUM_SIZE = 100;
 
@@ -219,8 +219,14 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 			@Override
 			protected void onPostExecute(Bitmap result) {
 				final Intent send = new Intent(BROADCAST_INTENT_ACTION);
-				final ParcelFileDescriptor pfd = master.storeBitmap(result);
-				send.putExtra(RESULT_BITMAP_FD, pfd);
+				final File bitmapFile = master.storeBitmap(result);
+				try {
+					final String bitmapFilePath = bitmapFile.getCanonicalPath();
+					Log.d(TAG, "bitmap file name "+ bitmapFilePath);
+					send.putExtra(RESULT_BITMAP_FILE, bitmapFilePath);
+				} catch (IOException ex) {
+					Log.w(TAG, "could not find file "+bitmapFile.toString(), ex);
+				}
 				master.sendBroadcast(send);
 			}
 
@@ -300,9 +306,9 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 			public void run() {
 				try {
 					final Bitmap bitmap = master.downloadBitmap(uri_);
-					final ParcelFileDescriptor pfd = master.storeBitmap(bitmap);
+					final File bitmapFile = master.storeBitmap(bitmap);
 					pendingIntent.send(master, RESULT_BITMAP_ID,
-							new Intent().putExtra(RESULT_BITMAP_FD, pfd));
+							new Intent().putExtra(RESULT_BITMAP_FILE, bitmapFile));
 				} catch (FileNotFoundException ex) {
 					ex.printStackTrace();
 				} catch (FailedDownload ex) {
@@ -329,18 +335,36 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 	 * @param bitmap
 	 * @return
 	 */
-	protected ParcelFileDescriptor storeBitmap(Bitmap bitmap) {
+	protected File storeBitmap(Bitmap bitmap) {
 		final File cacheDir = this.getCacheDir();
+		File tempFile = null;
 		try {
-			final File tempFile = File.createTempFile("download", "tmp",
-					cacheDir);
+			tempFile = File.createTempFile("download", "tmp", cacheDir);
 			final ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
 			bitmap.compress(Bitmap.CompressFormat.JPEG, 40, outBytes);
 
 			final FileOutputStream fo = new FileOutputStream(tempFile);
 			fo.write(outBytes.toByteArray());
 			fo.close();
-
+			outBytes.close();
+			tempFile.setReadable(true, false);
+			tempFile.setWritable(true, false);
+			return tempFile;
+		} catch (IOException ex) {
+			Log.e(TAG, "could not write bitmap file "+tempFile);
+		}
+		return null;
+	}
+	/**
+	 * In order to preserve security for this object only a file descriptor is
+	 * provided. The file is immediately deleted.
+	 * 
+	 * @param bitmap
+	 * @return
+	 */
+	protected ParcelFileDescriptor storeBitmapGetPFD(Bitmap bitmap) {
+		final File tempFile = this.storeBitmap(bitmap);
+		try {
 			final ParcelFileDescriptor pdf = ParcelFileDescriptor.open(
 					tempFile, ParcelFileDescriptor.MODE_READ_ONLY);
 			//tempFile.delete();

@@ -1,5 +1,7 @@
 package edu.vanderbilt.cs282.feisele;
 
+import java.io.File;
+
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -123,9 +125,10 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 
 			public void onReceive(Context ctxt, Intent intent) {
 				Log.d(TAG, "received broadcast bitmap");
-				final ParcelFileDescriptor pfd = intent
-						.getParcelableExtra(ThreadedDownloadService.RESULT_BITMAP_FD);
-				master.imageFragment.loadBitmap(pfd);
+				final String bitmapFileString = intent
+						.getStringExtra(ThreadedDownloadService.RESULT_BITMAP_FILE);
+				final File bitmapFile = new File(bitmapFileString);
+				master.imageFragment.loadBitmap(bitmapFile);
 			}
 		};
 		final IntentFilter filter =
