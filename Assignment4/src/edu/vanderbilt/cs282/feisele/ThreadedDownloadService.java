@@ -19,9 +19,12 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Message;
+import android.os.Messenger;
 import android.os.Parcel;
 import android.os.ParcelFileDescriptor;
 import android.os.Parcelable;
+import android.os.RemoteException;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -251,15 +254,26 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 		Log.d(TAG, "downloadWithThreadViaMessage");
 		if (extras == null)
 			return Service.START_NOT_STICKY;
-
+		
 		(new Thread(null, new Runnable() {
 			private final ThreadedDownloadService master = ThreadedDownloadService.this;
 			final Uri uri_ = uri;
+			final Messenger messenger = extras.getParcelable(MESSENGER_KEY);
 
 			public void run() {
-				final Bitmap bitmap;
 				try {
-					bitmap = master.downloadBitmap(uri_);
+					final Bitmap bitmap = master.downloadBitmap(uri_);
+					final File bitmapFile = master.storeBitmap(bitmap);
+						final String bitmapFilePath = bitmapFile.getCanonicalPath();
+						Log.d(TAG, "bitmap file name "+ bitmapFilePath);
+						
+						final Message msg = Message.obtain();
+						final Bundle bundle = new Bundle();
+						bundle.putString(RESULT_BITMAP_FILE, bitmapFilePath);
+						msg.setData(bundle);
+						msg.what = DownloadFragment.DownloadState.SET_BITMAP.ordinal();
+						messenger.send(msg);
+
 				} catch (FailedDownload ex) {
 					master.reportDownloadFault(ex.msg);
 					return;
@@ -267,6 +281,9 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (RemoteException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}

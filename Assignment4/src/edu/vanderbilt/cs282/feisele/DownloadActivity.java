@@ -127,8 +127,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 				Log.d(TAG, "received broadcast bitmap");
 				final String bitmapFileString = intent
 						.getStringExtra(ThreadedDownloadService.RESULT_BITMAP_FILE);
-				final File bitmapFile = new File(bitmapFileString);
-				master.imageFragment.loadBitmap(bitmapFile);
+				master.imageFragment.loadBitmap(bitmapFileString);
 			}
 		};
 		final IntentFilter filter =

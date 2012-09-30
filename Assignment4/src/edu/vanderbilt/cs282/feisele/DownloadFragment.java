@@ -157,6 +157,11 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 			Log.e(TAG, "could not load file " + bitmapFile, ex);
 		}
 	}
+	
+	public void loadBitmap(String bitmapFileString) {
+		final File bitmapFile = new File(bitmapFileString);
+		this.loadBitmap(bitmapFile);
+	}
 
 	/**
 	 * Report problems with downloading the image back to the parent activity.
@@ -212,8 +217,9 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 				}
 					break;
 				case SET_BITMAP: {
-					final Bitmap bitmap = (Bitmap) msg.obj;
-					master.setBitmap(bitmap);
+					final Bundle bundle = msg.getData();
+					final String bitmapFileString = bundle.getString(ThreadedDownloadService.RESULT_BITMAP_FILE);
+					master.loadBitmap(bitmapFileString);
 				}
 					break;
 				case SET_ERROR: {
