@@ -38,6 +38,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 
 	public interface OnDownloadFaultHandler {
 		public void onFault(CharSequence msg);
+		public void onComplete();
 	}
 
 	/**
@@ -178,7 +179,14 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		if (parent instanceof OnDownloadFaultHandler) {
 			((OnDownloadFaultHandler) parent).onFault(errorMsg);
 		}
-		this.progress.cancel();
+	}
+	
+	private void reportDownloadComplete() {
+		final FragmentActivity parent = this.getActivity();
+
+		if (parent instanceof OnDownloadFaultHandler) {
+			((OnDownloadFaultHandler) parent).onComplete();
+		}
 	}
 
 	/**
@@ -224,6 +232,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 					final Bundle bundle = msg.getData();
 					final String bitmapFileString = bundle.getString(ThreadedDownloadService.RESULT_BITMAP_FILE);
 					master.loadBitmap(bitmapFileString);
+					master.reportDownloadComplete();
 				}
 					break;
 				case SET_ERROR: {
