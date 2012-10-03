@@ -10,9 +10,8 @@
     <string name="message_downloading_async_task">downloading via AsyncTask</string>
     <string name="message_downloading_message">downloading via Message</string>
     <string name="message_downloading_runnable">downloading via Runnable</string>
-    <string name="message_progress_async_task">download starting via AsyncTask</string>
-    <string name="message_progress_run_runnable">download starting via Runnable</string>
-    <string name="message_progress_run_messages">download starting via Messages</string>
-    
+    <string name="message_progress_async_task_w_receiver">download starting via AsyncTask with receiver responding</string>
+    <string name="message_progress_thread_w_pending_intent">download starting via thread with pending intent responding</string>
+    <string name="message_progress_thread_w_messenger">download starting via thread with messager responding</string>
 
 </resources>

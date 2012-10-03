@@ -7,9 +7,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
 import android.app.Service;
@@ -18,6 +20,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
@@ -38,6 +41,7 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 	static public final String MESSENGER_KEY = "edu.vanderbilt.cs282.feisele.broadcast_intent";
 	static public final int RESULT_BITMAP_ID = 12;
 	static public final String RESULT_BITMAP_FILE = "edu.vanderbilt.cs282.feisele.bitmap_file_descriptor";
+	static public final String RESULT_FAULT = "edu.vanderbilt.cs282.feisele.download_fault";
 
 	static public final int MAXIMUM_SIZE = 100;
 
@@ -151,8 +155,12 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 			Log.d(TAG, "bitmap size [" + Integer.toString(bitmap.getWidth())
 					+ " : " + Integer.toString(bitmap.getHeight()) + "]");
 			return bitmap;
+		} catch (UnknownHostException ex) {
+			Log.w(TAG, "download failed bad host", ex);
+			throw new FailedDownload(this.getResources().getText(
+					R.string.error_downloading_url));
 		} catch (IOException ex) {
-			Log.w(TAG, "download failed", ex);
+			Log.w(TAG, "download failed ?", ex);
 			throw new FailedDownload(this.getResources().getText(
 					R.string.error_downloading_url));
 		}
@@ -166,20 +174,15 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 
 		final public CharSequence msg;
 
+		@Override
+		public String getMessage() {
+			return new StringBuilder().append(this.msg).toString();
+		}
+
 		public FailedDownload(CharSequence msg) {
 			super();
 			this.msg = msg;
 		}
-	}
-
-
-	/**
-	 * Report problems with downloading the image back to the parent activity.
-	 * 
-	 * @param errorMsg
-	 */
-	private void reportDownloadFault(CharSequence errorMsg) {
-
 	}
 
 	/**
@@ -198,6 +201,7 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 		Log.d(TAG, "downloadWithAsyncTaskViaBroadcastIntent");
 		(new AsyncTask<Uri, Void, Bitmap>() {
 			private final ThreadedDownloadService master = ThreadedDownloadService.this;
+			private volatile String faultMessage = null;
 
 			@Override
 			protected Bitmap doInBackground(Uri... params) {
@@ -207,11 +211,11 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 				try {
 					return master.downloadBitmap(uri);
 				} catch (FailedDownload ex) {
-					master.reportDownloadFault(ex.msg);
+					this.faultMessage = ex.getMessage();
 				} catch (FileNotFoundException ex) {
-					master.reportDownloadFault(ex.getLocalizedMessage());
+					this.faultMessage = ex.getLocalizedMessage();
 				} catch (IOException ex) {
-					master.reportDownloadFault(ex.getLocalizedMessage());
+					this.faultMessage = ex.getLocalizedMessage();
 				}
 				return null;
 			}
@@ -222,13 +226,19 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 			@Override
 			protected void onPostExecute(Bitmap result) {
 				final Intent send = new Intent(BROADCAST_INTENT_ACTION);
+				if (result == null) {
+					send.putExtra(RESULT_FAULT, this.faultMessage);
+					master.sendBroadcast(send);
+					return;
+				}
 				final File bitmapFile = master.storeBitmap(result);
 				try {
 					final String bitmapFilePath = bitmapFile.getCanonicalPath();
-					Log.d(TAG, "bitmap file name "+ bitmapFilePath);
+					Log.d(TAG, "bitmap file name " + bitmapFilePath);
 					send.putExtra(RESULT_BITMAP_FILE, bitmapFilePath);
 				} catch (IOException ex) {
-					Log.w(TAG, "could not find file "+bitmapFile.toString(), ex);
+					Log.w(TAG, "could not find file " + bitmapFile.toString(),
+							ex);
 				}
 				master.sendBroadcast(send);
 			}
@@ -254,39 +264,54 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 		Log.d(TAG, "downloadWithThreadViaMessage");
 		if (extras == null)
 			return Service.START_NOT_STICKY;
-		
+
 		(new Thread(null, new Runnable() {
 			private final ThreadedDownloadService master = ThreadedDownloadService.this;
 			final Uri uri_ = uri;
 			final Messenger messenger = extras.getParcelable(MESSENGER_KEY);
 
 			public void run() {
+				final Message msg = Message.obtain();
+				final Bundle bundle = new Bundle();
 				try {
 					final Bitmap bitmap = master.downloadBitmap(uri_);
+					if (bitmap == null) {
+						msg.what = DownloadFragment.DownloadState.SET_ERROR
+								.ordinal();
+						bundle.putString(RESULT_FAULT, "bitmap null");
+						return;
+					}
 					final File bitmapFile = master.storeBitmap(bitmap);
-						final String bitmapFilePath = bitmapFile.getCanonicalPath();
-						Log.d(TAG, "bitmap file name "+ bitmapFilePath);
-						
-						final Message msg = Message.obtain();
-						final Bundle bundle = new Bundle();
-						bundle.putString(RESULT_BITMAP_FILE, bitmapFilePath);
-						msg.setData(bundle);
-						msg.what = DownloadFragment.DownloadState.SET_BITMAP.ordinal();
-						messenger.send(msg);
+					final String bitmapFilePath = bitmapFile.getCanonicalPath();
+					Log.d(TAG, "bitmap file name " + bitmapFilePath);
+
+					bundle.putString(RESULT_BITMAP_FILE, bitmapFilePath);
+					msg.setData(bundle);
+					msg.what = DownloadFragment.DownloadState.SET_BITMAP
+							.ordinal();
+					return;
 
 				} catch (FailedDownload ex) {
-					master.reportDownloadFault(ex.msg);
-					return;
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (RemoteException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					msg.what = DownloadFragment.DownloadState.SET_ERROR
+							.ordinal();
+					bundle.putString(RESULT_FAULT, ex.getMessage());
+				} catch (FileNotFoundException ex) {
+					msg.what = DownloadFragment.DownloadState.SET_ERROR
+							.ordinal();
+					bundle.putString(RESULT_FAULT, ex.getMessage());
+				} catch (IOException ex) {
+					msg.what = DownloadFragment.DownloadState.SET_ERROR
+							.ordinal();
+					bundle.putString(RESULT_FAULT, ex.getMessage());
+				} finally {
+					msg.setData(bundle);
+					try {
+						messenger.send(msg);
+					} catch (RemoteException ex) {
+						Log.e(TAG, "could not send fault", ex);
+					}
 				}
+
 			}
 		})).start();
 		return Service.START_NOT_STICKY;
@@ -325,8 +350,8 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 					final Bitmap bitmap = master.downloadBitmap(uri_);
 					final File bitmapFile = master.storeBitmap(bitmap);
 					final String bitmapFilePath = bitmapFile.getCanonicalPath();
-					pendingIntent.send(master, RESULT_BITMAP_ID,
-							new Intent().putExtra(RESULT_BITMAP_FILE, bitmapFilePath));
+					pendingIntent.send(master, RESULT_BITMAP_ID, new Intent()
+							.putExtra(RESULT_BITMAP_FILE, bitmapFilePath));
 				} catch (FileNotFoundException ex) {
 					ex.printStackTrace();
 				} catch (FailedDownload ex) {
@@ -353,6 +378,7 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 	 * @param bitmap
 	 * @return
 	 */
+	@TargetApi(9)
 	protected File storeBitmap(Bitmap bitmap) {
 		final File cacheDir = this.getCacheDir();
 		File tempFile = null;
@@ -365,14 +391,17 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 			fo.write(outBytes.toByteArray());
 			fo.close();
 			outBytes.close();
-			tempFile.setReadable(true, false);
-			tempFile.setWritable(true, false);
+			if (Build.VERSION.SDK_INT > Build.VERSION_CODES.FROYO) {
+				tempFile.setReadable(true, false);
+				tempFile.setWritable(true, false);
+			}
 			return tempFile;
 		} catch (IOException ex) {
-			Log.e(TAG, "could not write bitmap file "+tempFile);
+			Log.e(TAG, "could not write bitmap file " + tempFile);
 		}
 		return null;
 	}
+
 	/**
 	 * In order to preserve security for this object only a file descriptor is
 	 * provided. The file is immediately deleted.
@@ -385,7 +414,7 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 		try {
 			final ParcelFileDescriptor pdf = ParcelFileDescriptor.open(
 					tempFile, ParcelFileDescriptor.MODE_READ_ONLY);
-			//tempFile.delete();
+			// tempFile.delete();
 			return pdf;
 		} catch (IOException ex) {
 		}
