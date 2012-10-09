@@ -1,0 +1,45 @@
+While each of the mechanisms for getting information back from the service
+to the application can work they suffer from various limitations.
+The limitations apply to both the returned bitmap as well as the 
+notification that the bitmap has been obtained (the progress indicator).
+Essentially the activity and service can pass through different states.
+Each of these configurations has its own issues.
+The basic case is where the activity instance remains active until the 
+service has completed its work.
+I don't have anything to say about this approach as it is the default case.
+
+If the activity has been restarted and produced a new instance of the
+activity then each of the approaches has a different behavior.
+
+- broadcast receiver : just works, the activity has been restored to the
+same state and the receiver decides if the intent is intended for it.
+
+- message handler : could work, as the handler is static it will process
+the request regardless of whether the activity is a new instance or not.
+
+- pending intent : could work, it may be that the pending intent as an
+instance variable will prevent the activity instance from being garbage
+collected and thus cause a memory leak and not update the proper activity
+instance.  It may be that a static pending intent will work correctly but
+the onActivityResult is an instance method so I doubt that this can
+be make to work correctly.
+
+Any workable solution must have some way to span from one instance of
+the activity to another.  The fragment does this quite nicely.
+The question is how long does this fragment hang around?
+
+http://developer.android.com/training/displaying-bitmaps/cache-bitmap.html
+"Luckily, you have a nice memory cache of bitmaps that you built in the Use a Memory Cache section. 
+This cache can be passed through to the new activity instance using a 
+Fragment which is preserved by calling setRetainInstance(true)). 
+After the activity has been recreated, this retained Fragment is 
+reattached and you gain access to the existing cache object, 
+allowing images to be quickly fetched and re-populated into the ImageView objects."
+
+I think the only reliable way is the following:
+
+In the saveInstanceState bundle retain a list of pending requests.
+When the activity shuts down it tells the service to forget about the notifications.
+When the activity restarts it tells the service to generate notices.
+The bridge then is the uuid of the individual requests.
+
