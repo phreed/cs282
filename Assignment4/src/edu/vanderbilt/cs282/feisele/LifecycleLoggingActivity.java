@@ -2,12 +2,13 @@ package edu.vanderbilt.cs282.feisele;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 
 /**
  * An abstract activity which logs the life-cycle call backs.
- * A decorator pattern implemented via inheritance.
+ * The GOF decorator pattern implemented via inheritance.
  */
 public abstract class LifecycleLoggingActivity extends FragmentActivity {
 	static private final String TAG = "Lifecycle Logging Activity";
@@ -83,6 +84,12 @@ public abstract class LifecycleLoggingActivity extends FragmentActivity {
 				append(" result=").append(resultCode).
 				append(" intent=[").append(data).append("]").
 				toString());
+	}
+	
+	@Override
+	public void onAttachFragment(Fragment fragment) {
+		super.onAttachFragment(fragment);
+		Log.d(TAG, "onAttachFragment");
 	}
 
 }

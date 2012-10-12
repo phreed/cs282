@@ -5,8 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import android.app.ProgressDialog;
+import android.app.Activity;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -14,8 +15,6 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.ParcelFileDescriptor;
-import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,6 +22,29 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+/**
+ * The Fragment is the android user interface component. Fragments can have a
+ * lifetime which spans the demise of its parent activity. In this particular
+ * case the fragment is attached to an effective clone of its original activity.
+ * <p>
+ * A fragment does not need to persist its view elements but in this
+ * implementation it does.
+ * <p>
+ * There is a some concern of the bitmap being updated concurrently some there
+ * is protection around the bitmap and its image view.
+ * <p>
+ * The following indicate the tolerated changes.
+ * <dl>
+ * <dt>orientation</dt>
+ * <dt>startActivity</dt>
+ * <dd>configuration change doesn't handle properly</dt>
+ * <dt>keyboard</dt>
+ * </dl>
+ * <p>
+ * 
+ * @author "Fred Eisele" <phreed@gmail.com>
+ * 
+ */
 public class DownloadFragment extends LifecycleLoggingFragment {
 	static private final String TAG = "Threaded Download Fragment";
 
@@ -34,11 +56,50 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	private ImageView bitmapImage = null;
 
 	public static Handler msgHandler = null;
-	private ProgressDialog progress;
+	public AtomicBoolean downloadPending = new AtomicBoolean(false);
 
-	public interface OnDownloadFaultHandler {
+	/**
+	 * In order for a fragment to be useful it must have a containing activity.
+	 * In many cases it is important for the fragment to communicate with that
+	 * activity. A common case is when the fragment generates an event in which
+	 * the other components of the UI may be interested. That is the case here,
+	 * when the fragment detects a failure related to the uri it received the
+	 * uri edit field should be marked in such a way that the operator is
+	 * notified. It would be presumptuous for the fragment to post the error
+	 * itself so it calls a method implemented by the controlling activity. In
+	 * keeping with the fragment being a UI component it relies on the
+	 * <p>
+	 * 
+	 * @see http://developer.android.com/guide/components/fragments.html#
+	 *      CommunicatingWithActivity
+	 */
+	public interface OnDownloadHandler {
 		public void onFault(CharSequence msg);
+
 		public void onComplete();
+	}
+
+	private OnDownloadHandler eventHandler = null;
+
+	/**
+	 * This ensures that the controlling activity implements the callback
+	 * interface.
+	 */
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		try {
+			this.eventHandler = (OnDownloadHandler) activity;
+		} catch (ClassCastException e) {
+			throw new ClassCastException(activity.toString()
+					+ " must implement " + OnDownloadHandler.class.getName());
+		}
+	}
+
+	@Override
+	public void onDetach() {
+		super.onDetach();
+		this.eventHandler = null;
 	}
 
 	/**
@@ -65,7 +126,8 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		final View result = inflater.inflate(R.layout.downloaded_image,
 				container, false);
 		this.bitmapImage = (ImageView) result.findViewById(R.id.current_image);
-		synchronized (this) {
+
+		synchronized (this.downloadPending) {
 			if (this.bitmap == null) {
 				this.resetImage(null);
 			} else {
@@ -100,7 +162,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 			return;
 		}
 		try {
-			synchronized (this) {
+			synchronized (this.downloadPending) {
 				this.bitmap = null;
 				final Bitmap bitmap = BitmapFactory.decodeStream(is);
 				this.bitmapImage.setImageBitmap(bitmap);
@@ -121,15 +183,11 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	 */
 	private void setBitmap(Bitmap result) {
 		try {
-			synchronized (this) {
+			synchronized (this.downloadPending) {
+				this.downloadPending.set(false);
 				this.bitmap = result;
 				if (this.bitmap != null) {
 					this.bitmapImage.setImageBitmap(this.bitmap);
-				}
-			}
-			if (this.progress != null) {
-				if (this.progress.isShowing()) {
-					this.progress.dismiss();
 				}
 			}
 		} catch (IllegalArgumentException ex) {
@@ -137,28 +195,34 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		}
 	}
 
-	public void loadBitmap(ParcelFileDescriptor pfd) {
-		final InputStream fileStream = new FileInputStream(
-				pfd.getFileDescriptor());
-		final Bitmap bitmap = BitmapFactory.decodeStream(fileStream);
-		this.setBitmap(bitmap);
-	}
-
 	public void loadBitmap(File bitmapFile) {
 		if (bitmapFile == null) {
 			Log.e(TAG, "null file");
 			return;
 		}
-		InputStream fileStream;
+		InputStream fileStream = null;
 		try {
 			fileStream = new FileInputStream(bitmapFile);
 			final Bitmap bitmap = BitmapFactory.decodeStream(fileStream);
 			this.setBitmap(bitmap);
 		} catch (FileNotFoundException ex) {
 			Log.e(TAG, "could not load file " + bitmapFile, ex);
+		} finally {
+			if (fileStream != null)
+				try {
+					fileStream.close();
+				} catch (IOException e) {
+					Log.e(TAG, "could not close file " + bitmapFile);
+				}
 		}
+		bitmapFile.delete();
 	}
-	
+
+	/**
+	 * The file path as a string.
+	 * 
+	 * @param bitmapFilePath
+	 */
 	public void loadBitmap(String bitmapFilePath) {
 		if (bitmapFilePath == null) {
 			Log.e(TAG, "null file path");
@@ -174,30 +238,21 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	 * @param errorMsg
 	 */
 	private void reportDownloadFault(CharSequence errorMsg) {
-		final FragmentActivity parent = this.getActivity();
-
-		if (parent instanceof OnDownloadFaultHandler) {
-			((OnDownloadFaultHandler) parent).onFault(errorMsg);
-		}
+		if (this.eventHandler == null)
+			return;
+		this.eventHandler.onFault(errorMsg);
 	}
-	
-	private void reportDownloadComplete() {
-		final FragmentActivity parent = this.getActivity();
 
-		if (parent instanceof OnDownloadFaultHandler) {
-			((OnDownloadFaultHandler) parent).onComplete();
-		}
+	private void reportDownloadComplete() {
+		if (this.eventHandler == null)
+			return;
+		this.eventHandler.onComplete();
 	}
 
 	/**
 	 * The valid message types for the handler.
 	 */
 	protected static enum DownloadState {
-		/**
-		 * indicate that the download is in progress and the progress spinner
-		 * should be displayed
-		 */
-		SET_PROGRESS_VISIBILITY,
 		/**
 		 * indicate that the download is complete and so the bitmap should be
 		 * displayed
@@ -223,14 +278,11 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 			@Override
 			public void handleMessage(Message msg) {
 				switch (DownloadState.lookup[msg.what]) {
-				case SET_PROGRESS_VISIBILITY: {
-					// master.startProgress(master.getResources().getText(
-					// R.string.message_progress_run_messages));
-				}
-					break;
+				
 				case SET_BITMAP: {
 					final Bundle bundle = msg.getData();
-					final String bitmapFileString = bundle.getString(ThreadedDownloadService.RESULT_BITMAP_FILE);
+					final String bitmapFileString = bundle
+							.getString(ThreadedDownloadService.RESULT_BITMAP_FILE);
 					master.loadBitmap(bitmapFileString);
 					master.reportDownloadComplete();
 				}
