@@ -143,7 +143,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 				final String bitmapFileString = intent
 						.getStringExtra(ThreadedDownloadService.RESULT_BITMAP_FILE);
 				master.imageFragment.loadBitmap(bitmapFileString);
-
+				
 				master.stopProgress();
 			}
 		};
@@ -215,7 +215,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 		switch (resultCode) {
 		case ThreadedDownloadService.RESULT_BITMAP_ID:
 			final String faultMsg = data
-					.getStringExtra(ThreadedDownloadService.RESULT_FAULT);
+			.getStringExtra(ThreadedDownloadService.RESULT_FAULT);
 			if (faultMsg != null) {
 				// TODO
 			}
@@ -241,7 +241,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 		this.progress.setProgress(0);
 		this.progress.show();
 	}
-
+	
 	/**
 	 * The progress can be null when the activity is stopped. The progress is
 	 * not dismissed unless it is showing. Record the fact that progress in
@@ -374,7 +374,6 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 
 		request.putExtra(ThreadedDownloadService.DOWNLOAD_METHOD,
 				DownloadMethod.ASYNC_TASK_BROADCAST.asParcelable());
-
 		runDownload(request, R.string.message_progress_async_task_w_receiver);
 	}
 
@@ -388,13 +387,11 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	 */
 	public void runThreadWithMessenger(View view) {
 		Log.d(TAG, "runThreadWithMessenger");
-
 		final Messenger messenger = new Messenger(DownloadFragment.msgHandler);
 		final Intent request = newRequestIntent();
 		request.putExtra(ThreadedDownloadService.MESSENGER_KEY, messenger);
 		request.putExtra(ThreadedDownloadService.DOWNLOAD_METHOD,
 				DownloadMethod.THREAD_MESSENGER.asParcelable());
-
 		runDownload(request, R.string.message_progress_thread_w_messenger);
 	}
 
@@ -411,11 +408,9 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 				ThreadedDownloadService.RESULT_BITMAP_ID, new Intent(),
 				PendingIntent.FLAG_UPDATE_CURRENT);
 		final Intent request = newRequestIntent();
-
 		request.putExtra(ThreadedDownloadService.PENDING_INTENT_KEY, pi);
 		request.putExtra(ThreadedDownloadService.DOWNLOAD_METHOD,
 				DownloadMethod.THREAD_PENDING_INTENT.asParcelable());
-
 		runDownload(request, R.string.message_progress_thread_w_pending_intent);
 	}
 

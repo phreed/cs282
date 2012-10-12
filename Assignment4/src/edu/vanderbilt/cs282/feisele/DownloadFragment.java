@@ -75,7 +75,6 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	 */
 	public interface OnDownloadHandler {
 		public void onFault(CharSequence msg);
-
 		public void onComplete();
 	}
 
@@ -101,7 +100,6 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		super.onDetach();
 		this.eventHandler = null;
 	}
-
 	/**
 	 * 
 	 * @param savedInstanceState
@@ -126,7 +124,6 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		final View result = inflater.inflate(R.layout.downloaded_image,
 				container, false);
 		this.bitmapImage = (ImageView) result.findViewById(R.id.current_image);
-
 		synchronized (this.downloadPending) {
 			if (this.bitmap == null) {
 				this.resetImage(null);
@@ -195,6 +192,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		}
 	}
 
+
 	public void loadBitmap(File bitmapFile) {
 		if (bitmapFile == null) {
 			Log.e(TAG, "null file");
@@ -213,11 +211,11 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 					fileStream.close();
 				} catch (IOException e) {
 					Log.e(TAG, "could not close file " + bitmapFile);
-				}
 		}
+	}
 		bitmapFile.delete();
 	}
-
+	
 	/**
 	 * The file path as a string.
 	 * 
@@ -242,7 +240,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 			return;
 		this.eventHandler.onFault(errorMsg);
 	}
-
+	
 	private void reportDownloadComplete() {
 		if (this.eventHandler == null)
 			return;
@@ -278,7 +276,6 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 			@Override
 			public void handleMessage(Message msg) {
 				switch (DownloadState.lookup[msg.what]) {
-				
 				case SET_BITMAP: {
 					final Bundle bundle = msg.getData();
 					final String bitmapFileString = bundle
