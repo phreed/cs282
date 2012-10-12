@@ -8,6 +8,10 @@ import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -58,6 +62,9 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	public static Handler msgHandler = null;
 	public AtomicBoolean downloadPending = new AtomicBoolean(false);
 
+	private BroadcastReceiver onEvent = null;
+	private Context context = null;
+
 	/**
 	 * In order for a fragment to be useful it must have a containing activity.
 	 * In many cases it is important for the fragment to communicate with that
@@ -87,27 +94,53 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
+		this.context = activity.getApplicationContext();
+		
+		/** for reporting back to the controlling activity  */
 		try {
 			this.eventHandler = (OnDownloadHandler) activity;
 		} catch (ClassCastException e) {
 			throw new ClassCastException(activity.toString()
 					+ " must implement " + OnDownloadHandler.class.getName());
 		}
+
+		/** for responding to messenger responses  */
+		DownloadFragment.msgHandler = initMsgHandler(this);
+		
+		/** for the broadcast intent */
+		this.onEvent = new BroadcastReceiver() {
+			final private DownloadFragment master = DownloadFragment.this;
+
+			public void onReceive(Context ctxt, Intent intent) {
+				Log.d(TAG, "received broadcast bitmap");
+				final String faultMsg = intent
+						.getStringExtra(ThreadedDownloadService.RESULT_FAULT);
+				if (faultMsg != null) {
+					Toast.makeText(master.context, faultMsg, Toast.LENGTH_LONG).show();
+					master.reportDownloadFault(faultMsg);
+					return;
+				}
+				final String bitmapFileString = intent
+						.getStringExtra(ThreadedDownloadService.RESULT_BITMAP_FILE);
+				master.loadBitmap(bitmapFileString);
+				
+				master.reportDownloadComplete();
+			}
+		};
+		final IntentFilter filter = new IntentFilter(
+				ThreadedDownloadService.BROADCAST_INTENT_ACTION);
+		this.context.registerReceiver(this.onEvent, filter);
 	}
 
+	/**
+	 * Disable the ability to receiver download completion messages.
+	 */
 	@Override
 	public void onDetach() {
 		super.onDetach();
 		this.eventHandler = null;
-	}
-	/**
-	 * 
-	 * @param savedInstanceState
-	 */
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		DownloadFragment.msgHandler = initMsgHandler(this);
+
+		this.context.unregisterReceiver(this.onEvent);
 	}
 
 	/**
@@ -192,7 +225,11 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		}
 	}
 
-
+	/**
+	 * Load the appropriate bitmap into the image view.
+	 * 
+	 * @param bitmapFilePath
+	 */
 	public void loadBitmap(File bitmapFile) {
 		if (bitmapFile == null) {
 			Log.e(TAG, "null file");

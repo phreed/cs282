@@ -2,4 +2,28 @@
 
 2012-10-03 Initial submission as Assignment4 for CS 282
 
+2012-10-06 Comments from Prof. Schmidt
 
+Improve documentation relating to the value of using
+a fragment to preserve state for the UI.
+
+Consolidate common/duplcate code.
+
+2012-10-10 Addressed comments from Prof. Schmidt
+
+General clean up of the code.
+
+2012-10-12 Moved broacast receiver into the fragment
+
+2012-10-12 Final submission
+
+Remaining issues:
+
+Regarding the proper functioning of the progress indicator.
+In the saveInstanceState bundle retain a list of pending requests.
+When the activity shuts down it tells the service to forget about the notifications.
+When the activity restarts it tells the service to generate notices.
+The bridge then is the uuid of the individual requests.
+
+URI rather than URL.
+This is not complete the URI field must be a valid URL.

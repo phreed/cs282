@@ -1,11 +1,11 @@
 package edu.vanderbilt.cs282.feisele;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -80,7 +80,6 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	private EditText urlEditText = null;
 
 	private DownloadFragment imageFragment = null;
-	private BroadcastReceiver onEvent = null;
 	private ProgressDialog progress;
 
 	/**
@@ -120,38 +119,6 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 
 	}
 
-	@Override
-	public void onAttachFragment(Fragment fragment) {
-		super.onAttachFragment(fragment);
-
-	}
-
-	@Override
-	public void onResume() {
-		super.onResume();
-
-		this.onEvent = new BroadcastReceiver() {
-			final private DownloadActivity master = DownloadActivity.this;
-
-			public void onReceive(Context ctxt, Intent intent) {
-				Log.d(TAG, "received broadcast bitmap");
-				final String faultMsg = intent
-						.getStringExtra(ThreadedDownloadService.RESULT_FAULT);
-				if (faultMsg != null) {
-					Toast.makeText(master, faultMsg, Toast.LENGTH_LONG).show();
-				}
-				final String bitmapFileString = intent
-						.getStringExtra(ThreadedDownloadService.RESULT_BITMAP_FILE);
-				master.imageFragment.loadBitmap(bitmapFileString);
-				
-				master.stopProgress();
-			}
-		};
-		final IntentFilter filter = new IntentFilter(
-				ThreadedDownloadService.BROADCAST_INTENT_ACTION);
-		this.registerReceiver(this.onEvent, filter);
-	}
-
 	final static String PROGRESS_RUNNING_STATE_KEY = "progress_running_state_key";
 
 	/**
@@ -184,16 +151,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	}
 
 	/**
-	 * There isn't any persistent data we need to save.
-	 */
-	@Override
-	public void onPause() {
-		super.onPause();
-		this.unregisterReceiver(this.onEvent);
-	}
-
-	/**
-	 * Shut things down that you don't need.
+	 * Shut things down that aren't needed.
 	 */
 	@Override
 	public void onStop() {
@@ -215,7 +173,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 		switch (resultCode) {
 		case ThreadedDownloadService.RESULT_BITMAP_ID:
 			final String faultMsg = data
-			.getStringExtra(ThreadedDownloadService.RESULT_FAULT);
+					.getStringExtra(ThreadedDownloadService.RESULT_FAULT);
 			if (faultMsg != null) {
 				// TODO
 			}
@@ -241,7 +199,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 		this.progress.setProgress(0);
 		this.progress.show();
 	}
-	
+
 	/**
 	 * The progress can be null when the activity is stopped. The progress is
 	 * not dismissed unless it is showing. Record the fact that progress in
@@ -327,6 +285,13 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 		if (uriStr == null) {
 			return getUrlFromHint(this.urlEditText.getHint());
 		}
+		try {
+			/** a cheap parse, not exactly correct, I'll get this next time */
+			new URL(uriStr);
+			return Uri.parse(uriStr);
+		} catch (MalformedURLException e) {
+			Log.w(TAG, "bad uri string");
+		}
 		final CharSequence errorMsg = this.getResources().getText(
 				R.string.error_malformed_url);
 		this.urlEditText.setError(errorMsg);
@@ -371,10 +336,12 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	public void runAsyncTaskWithReceiver(View view) {
 		Log.d(TAG, "runAsyncTaskWithReceiver");
 		final Intent request = newRequestIntent();
-
-		request.putExtra(ThreadedDownloadService.DOWNLOAD_METHOD,
-				DownloadMethod.ASYNC_TASK_BROADCAST.asParcelable());
-		runDownload(request, R.string.message_progress_async_task_w_receiver);
+		if (request != null) {
+			request.putExtra(ThreadedDownloadService.DOWNLOAD_METHOD,
+					DownloadMethod.ASYNC_TASK_BROADCAST.asParcelable());
+			runDownload(request,
+					R.string.message_progress_async_task_w_receiver);
+		}
 	}
 
 	/**
@@ -389,10 +356,12 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 		Log.d(TAG, "runThreadWithMessenger");
 		final Messenger messenger = new Messenger(DownloadFragment.msgHandler);
 		final Intent request = newRequestIntent();
-		request.putExtra(ThreadedDownloadService.MESSENGER_KEY, messenger);
-		request.putExtra(ThreadedDownloadService.DOWNLOAD_METHOD,
-				DownloadMethod.THREAD_MESSENGER.asParcelable());
-		runDownload(request, R.string.message_progress_thread_w_messenger);
+		if (request != null) {
+			request.putExtra(ThreadedDownloadService.MESSENGER_KEY, messenger);
+			request.putExtra(ThreadedDownloadService.DOWNLOAD_METHOD,
+					DownloadMethod.THREAD_MESSENGER.asParcelable());
+			runDownload(request, R.string.message_progress_thread_w_messenger);
+		}
 	}
 
 	/**
@@ -408,10 +377,13 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 				ThreadedDownloadService.RESULT_BITMAP_ID, new Intent(),
 				PendingIntent.FLAG_UPDATE_CURRENT);
 		final Intent request = newRequestIntent();
-		request.putExtra(ThreadedDownloadService.PENDING_INTENT_KEY, pi);
-		request.putExtra(ThreadedDownloadService.DOWNLOAD_METHOD,
-				DownloadMethod.THREAD_PENDING_INTENT.asParcelable());
-		runDownload(request, R.string.message_progress_thread_w_pending_intent);
+		if (request != null) {
+			request.putExtra(ThreadedDownloadService.PENDING_INTENT_KEY, pi);
+			request.putExtra(ThreadedDownloadService.DOWNLOAD_METHOD,
+					DownloadMethod.THREAD_PENDING_INTENT.asParcelable());
+			runDownload(request,
+					R.string.message_progress_thread_w_pending_intent);
+		}
 	}
 
 	/**
@@ -422,6 +394,8 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	private Intent newRequestIntent() {
 		final Intent request = newServiceIntent();
 		final Uri uri = getValidUrlFromWidget();
+		if (uri == null)
+			return null;
 		Log.v(TAG, "downloading " + uri);
 		request.setData(uri);
 		return request;

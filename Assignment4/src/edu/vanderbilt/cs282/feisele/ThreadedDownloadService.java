@@ -446,6 +446,10 @@ public class ThreadedDownloadService extends LifecycleLoggingService {
 		}
 
 		final Uri uri = intent.getData();
+		if (uri == null) {
+			Log.e(TAG, "null uri provided");
+			return Service.START_NOT_STICKY;
+		}
 		Log.d(TAG, "process " + method + " : " + uri.toString());
 		final Bundle extras = intent.getExtras();
 
