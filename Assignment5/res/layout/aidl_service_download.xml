@@ -1,0 +1,53 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/top"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/prompt_image_url"
+            style="@style/Prompt.Style"
+            android:text="@string/prompt_image_url" />
+
+        <EditText
+            android:id="@+id/edit_image_url"
+            style="@style/Url.EditText.Style"
+            android:hint="@string/default_image_url" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/inputs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/run_download_sync_aidl"
+            style="@style/Button.Style"
+            android:onClick="runDownloadSyncAidl"
+            android:text="@string/label_run_download_sync_aidl" />
+
+        <Button
+            android:id="@+id/run_download_async_aidl"
+            style="@style/Button.Style"
+            android:onClick="runDownloadAsyncAidl"
+            android:text="@string/label_run_download_async_aidl" />
+
+        <Button
+            android:id="@+id/reset_image"
+            style="@style/Button.Style"
+            android:onClick="resetImage"
+            android:text="@string/label_reset_image" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</LinearLayout>

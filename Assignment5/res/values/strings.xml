@@ -1,0 +1,15 @@
+<resources>
+
+    <string name="title_activity">CS282 AIDL Service Download</string>
+    <string name="app_name">ServiceAidlDownload</string>
+    <string name="label_run_download_sync_aidl">Run&#10;Sync&#10;AIDL</string>
+    <string name="label_run_download_async_aidl">Run&#10;Async&#10;AIDL</string>
+    <string name="label_reset_image">Reset&#10;Image</string>
+    <string name="prompt_image_url">Enter URL:</string>
+    <string name="describe_image">An image to display</string>
+    <string name="default_image_url">http://www.dre.vanderbilt.edu/~schmidt/ka.png</string>
+    <string name="menu_settings">menu settings</string>
+    <string name="dialog_progress_title">Dowloading</string>
+    <string name="dialog_progress_message">downloading bitmap</string>
+
+</resources>
