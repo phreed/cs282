@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele;
+package edu.vanderbilt.cs282.feisele.assignment5;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +27,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
+import edu.vanderbilt.cs282.feisele.R;
 
 /**
  * The Fragment is the android user interface component. Fragments can have a

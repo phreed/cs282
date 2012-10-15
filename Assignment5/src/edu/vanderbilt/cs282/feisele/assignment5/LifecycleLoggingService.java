@@ -1,5 +1,6 @@
-package edu.vanderbilt.cs282.feisele;
+package edu.vanderbilt.cs282.feisele.assignment5;
 
+import edu.vanderbilt.cs282.feisele.R;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;

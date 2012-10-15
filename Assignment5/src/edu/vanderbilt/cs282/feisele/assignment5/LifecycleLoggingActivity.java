@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele;
+package edu.vanderbilt.cs282.feisele.assignment5;
 
 import android.content.Intent;
 import android.os.Bundle;

@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele;
+package edu.vanderbilt.cs282.feisele.assignment5;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.UnknownHostException;
+
+import edu.vanderbilt.cs282.feisele.R;
 
 import android.annotation.TargetApi;
 import android.app.Service;
