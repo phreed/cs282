@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="edu.vanderbilt.cs282.feisele"
+    package="edu.vanderbilt.cs282.feisele.assignment5"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -34,19 +34,11 @@
         <service
             android:name=".DownloadBoundServiceSync"
             android:exported="false"
-            android:process=":my_process" >
-            <intent-filter>
-                <action android:name="edu.vanderbilt.cs282.feisele.DownloadCall" />
-            </intent-filter>
-        </service>
+            android:process=":my_process" />
         <service
             android:name=".DownloadBoundServiceAsync"
             android:exported="false"
-            android:process=":my_process" >
-            <intent-filter>
-                <action android:name="edu.vanderbilt.cs282.feisele.DownloadRequest" />
-            </intent-filter>
-        </service>
+            android:process=":my_process" />
     </application>
 
 </manifest>

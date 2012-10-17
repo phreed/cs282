@@ -2,6 +2,8 @@ package edu.vanderbilt.cs282.feisele.assignment5;
 
 /**
  * Request that a URI be downloaded.
+ *
+ * @author "Fred Eisele" <phreed@gmail.com>
  */
 import edu.vanderbilt.cs282.feisele.assignment5.DownloadCallback;
  

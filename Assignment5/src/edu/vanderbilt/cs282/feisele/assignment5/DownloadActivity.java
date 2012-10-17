@@ -3,6 +3,9 @@ package edu.vanderbilt.cs282.feisele.assignment5;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import android.app.ProgressDialog;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -11,11 +14,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.text.Editable;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
-import edu.vanderbilt.cs282.feisele.R;
 import edu.vanderbilt.cs282.feisele.assignment5.DownloadFragment.OnDownloadHandler;
 
 /**
@@ -74,9 +75,8 @@ import edu.vanderbilt.cs282.feisele.assignment5.DownloadFragment.OnDownloadHandl
  * 
  */
 public class DownloadActivity extends LifecycleLoggingActivity implements
-		OnDownloadHandler 
-{
-	static private final String TAG = "Threaded Download Activity";
+		OnDownloadHandler {
+	static private final Logger logger = LoggerFactory.getLogger("class.activity.download");
 
 	private EditText urlEditText = null;
 
@@ -133,7 +133,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 		final boolean wasProgressRunning = savedInstanceState
 				.getBoolean(PROGRESS_RUNNING_STATE_KEY);
 		if (wasProgressRunning)
-			Log.v(TAG, "progress was running ");
+			logger.trace("progress was running ");
 		final boolean isDownloadStillPending = this.imageFragment.downloadPending
 				.get();
 		if (wasProgressRunning & isDownloadStillPending)
@@ -148,7 +148,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 		savedInstanceState.putBoolean(PROGRESS_RUNNING_STATE_KEY,
 				this.isProgressRunning());
 		super.onSaveInstanceState(savedInstanceState);
-		Log.d(TAG, "onSaveInstanceState");
+		logger.debug("onSaveInstanceState");
 	}
 
 	/**
@@ -165,7 +165,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	 * download is expected in the fragment.
 	 */
 	private void startProgress(CharSequence msg) {
-		Log.d(TAG, "startProgress");
+		logger.debug("startProgress");
 		this.imageFragment.downloadPending.set(true);
 
 		this.progress = new ProgressDialog(this);
@@ -182,7 +182,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	 * complete in the fragment.
 	 */
 	private void stopProgress() {
-		Log.d(TAG, "stopProgress");
+		logger.debug("stopProgress");
 		this.imageFragment.downloadPending.set(false);
 		if (this.isProgressRunning())
 			this.progress.dismiss();
@@ -205,7 +205,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	 * Progress dialog can be shut down the
 	 */
 	public void onComplete() {
-		Log.d(TAG, "onComplete");
+		logger.debug("onComplete");
 		this.runOnUiThread(new Runnable() {
 			final DownloadActivity master = DownloadActivity.this;
 
@@ -226,7 +226,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 			final DownloadActivity master = DownloadActivity.this;
 
 			public void run() {
-				Log.d(TAG, "onFault");
+				logger.debug("onFault");
 				Toast.makeText(master, msg, Toast.LENGTH_LONG).show();
 
 				final Drawable dr = master.getResources().getDrawable(
@@ -266,7 +266,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 			new URL(uriStr);
 			return Uri.parse(uriStr);
 		} catch (MalformedURLException e) {
-			Log.w(TAG, "bad uri string");
+			logger.warn("bad uri string");
 		}
 		final CharSequence errorMsg = this.getResources().getText(
 				R.string.error_malformed_url);
@@ -297,7 +297,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	 * @param view
 	 */
 	public void resetImage(View view) {
-		Log.d(TAG, "resetImage");
+		logger.debug("resetImage");
 		this.imageFragment.resetImage(view);
 	}
 
@@ -307,12 +307,13 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	 * @param view
 	 */
 	public void runDownloadSyncAidl(View view) {
-		Log.d(TAG, "runDownloadSyncAidl");
+		logger.debug("runDownloadSyncAidl");
 		final Uri uri = this.getValidUrlFromWidget();
-		if (uri == null) return;
-		
+		if (uri == null)
+			return;
+
 		this.imageFragment.downloadSyncAidl(uri);
-		
+
 		this.startProgress(this.getResources().getText(
 				R.string.message_progress_sync));
 	}
@@ -323,11 +324,12 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	 * @param view
 	 */
 	public void runDownloadAsyncAidl(View view) {
-		Log.d(TAG, "runDownloadAsyncAidl");
+		logger.debug("runDownloadAsyncAidl");
 		final Uri uri = this.getValidUrlFromWidget();
-		if (uri == null) return;
+		if (uri == null)
+			return;
 		this.imageFragment.downloadAsyncAidl(uri);
-		
+
 		this.startProgress(this.getResources().getText(
 				R.string.message_progress_async));
 	}

@@ -4,15 +4,24 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.util.Log;
 
+/**
+ * Asynchronous AIDL model ("Run Async AIDL").
+ * <p>
+ * This service supports the DownloadRequest interface for inbound calls.
+ * 
+ *  @author "Fred Eisele" <phreed@gmail.com>
+ */
 public class DownloadBoundServiceAsync extends DownloadBoundService {
-	static private final String TAG = "Threaded Download Service";
+	static private final Logger logger = LoggerFactory.getLogger("class.service.download.bound.async");
 
 	// ===========================================================
 	// AIDL Implementation
@@ -48,7 +57,7 @@ public class DownloadBoundServiceAsync extends DownloadBoundService {
 	 */
 	@Override
 	public IBinder onBind(Intent intent) {
-		Log.d(TAG, "sync service on bind");
+		logger.debug("sync service on bind");
 		return this.stub;
 	}
 

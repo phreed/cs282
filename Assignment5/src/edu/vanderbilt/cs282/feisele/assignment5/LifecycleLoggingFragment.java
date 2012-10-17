@@ -1,113 +1,136 @@
 package edu.vanderbilt.cs282.feisele.assignment5;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * An abstract activity which logs the life-cycle call backs.
- * A decorator pattern implemented via inheritance.
+ * An abstract activity which logs the life-cycle call backs. A decorator
+ * pattern implemented via inheritance.
+ * 
+ * @author "Fred Eisele" <phreed@gmail.com>
  */
 public abstract class LifecycleLoggingFragment extends Fragment {
-	static private final String TAG = "Lifecycle Logging Fragment";
+	static private final Logger logger = LoggerFactory.getLogger("class.logging.fragment");
 
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
-		Log.d(TAG, "onAttach: fragment attached "+activity.toString());
+		logger.debug("onAttach: fragment attached " + activity.toString());
 	}
-	
+
 	@Override
 	public void onDetach() {
 		super.onDetach();
-		Log.d(TAG, "onDetach: fragment detach");
+		logger.debug("onDetach: fragment detach");
 	}
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d(TAG, "onCreate: fragment rebuilt");
 		if (savedInstanceState == null) {
-			Log.d(TAG, "onCreate: fragment created fresh");
-        } else {
-        	Log.d(TAG, "onCreate: fragment restarted");
-        }
+			logger.debug("onCreate: fragment created fresh");
+		} else {
+			logger.debug("onCreate: fragment restarted");
+		}
 	}
-	
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		Log.d(TAG, "onCreateView: fragment rebuilt");
 		if (savedInstanceState == null) {
-			Log.d(TAG, "onCreateView: fragment created fresh");
-        } else {
-        	Log.d(TAG, "onCreateView: fragment restarted");
-        }
-		// super.onCreateView(inflater, container, savedInstanceState);
-		return null;
+			logger.debug("onCreateView: fragment created fresh");
+		} else {
+			logger.debug("onCreateView: fragment restarted");
+		}
+		return super.onCreateView(inflater, container, savedInstanceState);
 	}
-	
+
+	/**
+	 * This helper method allows the caller to specify whether the calling chain
+	 * should be continued. The android documentation suggests that in the case
+	 * of programmatically attached fragment the super should not be called (or
+	 * is unnecessary).
+	 * 
+	 * @param inflater
+	 * @param container
+	 * @param savedInstanceState
+	 * @param isDynamic
+	 * @return
+	 */
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState, boolean isDynamic) {
+		if (isDynamic) {
+			if (savedInstanceState == null) {
+				logger.debug("onCreateView: dynamic fragment created fresh");
+			} else {
+				logger.debug("onCreateView: dynamic fragment restarted");
+			}
+			return null;
+		}
+		return super.onCreateView(inflater, container, savedInstanceState);
+	}
+
 	@Override
 	public void onDestroyView() {
 		super.onDestroyView();
-		Log.d(TAG, "onDestroyView: fragment view destroyed");
+		logger.debug("onDestroyView: fragment view destroyed");
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
-		Log.d(TAG, "onStart");
+		logger.debug("onStart");
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		Log.d(TAG, "onResume");
+		logger.debug("onResume");
 	}
 
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {
 		super.onSaveInstanceState(savedInstanceState);
-		Log.d(TAG, "onSaveInstanceState");
+		logger.debug("onSaveInstanceState");
 	}
 
 	@Override
 	public void onPause() {
 		super.onPause();
-		Log.d(TAG, "onPause");
+		logger.debug("onPause");
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
-		Log.d(TAG, "onStop");
+		logger.debug("onStop");
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		Log.d(TAG, "onDestroy");
+		logger.debug("onDestroy");
 	}
-	
+
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		Log.d(TAG, "onActivityCreated: fragment activity created ");
+		logger.debug("onActivityCreated: fragment activity created ");
 	}
-	
+
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		Log.d(TAG, new StringBuilder("onActivityResult ").
-				append(" request=").append(requestCode).
-				append(" result=").append(resultCode).
-				append(" intent=[").append(data).append("]").
-				toString());
+		logger.debug("onActivityResult  request={}  result={} intent=[{}]",
+				requestCode, resultCode, data);
 	}
 
 }

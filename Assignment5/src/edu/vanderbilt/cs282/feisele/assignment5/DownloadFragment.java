@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -21,13 +24,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
-import edu.vanderbilt.cs282.feisele.R;
 
 /**
  * The Fragment is the android user interface component. Fragments can have a
@@ -53,7 +54,8 @@ import edu.vanderbilt.cs282.feisele.R;
  * 
  */
 public class DownloadFragment extends LifecycleLoggingFragment {
-	static private final String TAG = "Threaded Download Fragment";
+	static private final Logger logger = LoggerFactory
+			.getLogger("class.fragment.download");
 
 	/** my oldest daughter */
 	static private final String DEFAULT_PORT_IMAGE = "raquel_eisele_port_2012.jpg";
@@ -96,7 +98,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		public boolean isBound;
 
 		public void onServiceConnected(ComponentName className, IBinder iservice) {
-			Log.d(TAG, "call service connected");
+			logger.debug("call service connected");
 			this.service = DownloadCall.Stub.asInterface(iservice);
 			this.isBound = true;
 		}
@@ -114,7 +116,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		public boolean isBound;
 
 		public void onServiceConnected(ComponentName className, IBinder iservice) {
-			Log.d(TAG, "request service connected");
+			logger.debug("request service connected");
 			this.service = DownloadRequest.Stub.asInterface(iservice);
 			this.isBound = true;
 		}
@@ -129,6 +131,22 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	/**
 	 * This ensures that the controlling activity implements the callback
 	 * interface.
+	 * <p>
+	 * The intents could be implicit... <code>
+	  final Intent syncIntent = new Intent(DownloadCall.class.getName()); 
+	  final Intent asyncIntent = new Intent(DownloadRequest.class.getName()); 
+	  </code> This would also require changes
+	 * to the AndroidManifest.xml
+	 * <p>
+	 * <code>
+	   <intent-filter>
+                <action android:name="edu.vanderbilt.cs282.feisele.DownloadCall" />
+       </intent-filter>
+            </code> ...and... <code>
+       <intent-filter>
+                <action android:name="edu.vanderbilt.cs282.feisele.DownloadRequest" />
+       </intent-filter>
+            </code> ... but in this case we will be explicit.
 	 */
 	@Override
 	public void onAttach(Activity activity) {
@@ -143,11 +161,13 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 					+ " must implement " + OnDownloadHandler.class.getName());
 		}
 
-		final Intent syncIntent = new Intent(DownloadCall.class.getName());
+		final Intent syncIntent = new Intent(this.context,
+				DownloadBoundServiceSync.class);
+		final Intent asyncIntent = new Intent(this.context,
+				DownloadBoundServiceAsync.class);
+
 		this.context.bindService(syncIntent, DownloadFragment.syncConnection,
 				Context.BIND_AUTO_CREATE);
-
-		final Intent asyncIntent = new Intent(DownloadRequest.class.getName());
 		this.context.bindService(asyncIntent, DownloadFragment.asyncConnection,
 				Context.BIND_AUTO_CREATE);
 	}
@@ -174,7 +194,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		super.onCreateView(inflater, container, savedInstanceState);
+		super.onCreateView(inflater, container, savedInstanceState, true);
 		this.setRetainInstance(true);
 
 		final View result = inflater.inflate(R.layout.downloaded_image,
@@ -224,7 +244,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 			try {
 				is.close();
 			} catch (IOException ex) {
-				Log.e(TAG, "cannot load a bitmap asset");
+				logger.error("cannot load a bitmap asset");
 			}
 		}
 	}
@@ -251,7 +271,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 				}
 			}
 		} catch (IllegalArgumentException ex) {
-			Log.e(TAG, "can not set bitmap image");
+			logger.error("can not set bitmap image");
 		}
 	}
 
@@ -262,7 +282,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	 */
 	public void loadBitmap(File bitmapFile) {
 		if (bitmapFile == null) {
-			Log.e(TAG, "null file");
+			logger.error("null file");
 			return;
 		}
 		InputStream fileStream = null;
@@ -271,13 +291,13 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 			final Bitmap bitmap = BitmapFactory.decodeStream(fileStream);
 			this.setBitmap(bitmap);
 		} catch (FileNotFoundException ex) {
-			Log.e(TAG, "could not load file " + bitmapFile, ex);
+			logger.error("could not load file " + bitmapFile, ex);
 		} finally {
 			if (fileStream != null)
 				try {
 					fileStream.close();
 				} catch (IOException e) {
-					Log.e(TAG, "could not close file " + bitmapFile);
+					logger.error("could not close file " + bitmapFile);
 				}
 		}
 		bitmapFile.delete();
@@ -290,7 +310,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	 */
 	public void loadBitmap(String imageFilePath) {
 		if (imageFilePath == null) {
-			Log.e(TAG, "null file path");
+			logger.error("null file path");
 			return;
 		}
 		final File bitmapFile = new File(imageFilePath);
@@ -324,9 +344,9 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	/**
 	 * Sync AIDL model ("Run Sync AIDL").
 	 * <p>
-	 * In this model the DownloadActivity spawns a Thread (or an AsyncTask),
-	 * binds to a DownloadBoundServiceSync process, and uses a synchronous
-	 * two-way AIDL method invocation to request that this service:
+	 * In this model the DownloadActivity spawns a Thread, binds to a
+	 * DownloadBoundServiceSync process, and uses a synchronous two-way AIDL
+	 * method invocation to request that this service:
 	 * <ol>
 	 * <li>download a designated bitmap file</li>
 	 * <li>store it in the</li> Android file system, and</li>
@@ -339,7 +359,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	 */
 	public void downloadSyncAidl(final Uri uri) {
 		if (!DownloadFragment.syncConnection.isBound) {
-			Log.w(TAG, "service not bound");
+			logger.warn("service not bound");
 			return;
 		}
 
@@ -347,7 +367,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 			final DownloadFragment master = DownloadFragment.this;
 
 			public void run() {
-				Log.d(TAG, "download thread");
+				logger.debug("download thread");
 
 				try {
 					final String imageFilePath = DownloadFragment.syncConnection.service
@@ -384,22 +404,22 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	 */
 	public void downloadAsyncAidl(Uri uri) {
 		if (!DownloadFragment.asyncConnection.isBound) {
-			Log.w(TAG, "async service not bound");
+			logger.warn("async service not bound");
 			return;
 		}
-		Log.w(TAG, "async service not bound");
+		logger.debug("download async aidl");
 		try {
-			DownloadFragment.asyncConnection.service.downloadImage(uri, callback);
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			DownloadFragment.asyncConnection.service.downloadImage(uri,
+					callback);
+		} catch (RemoteException ex) {
+			logger.error("download async aidl", ex);
 		}
 
 	}
 
 	private final DownloadCallback.Stub callback = new DownloadCallback.Stub() {
-        private DownloadFragment master = DownloadFragment.this;
-        
+		private DownloadFragment master = DownloadFragment.this;
+
 		public void sendPath(String imageFilePath) throws RemoteException {
 			master.loadBitmap(imageFilePath);
 			master.reportDownloadComplete();

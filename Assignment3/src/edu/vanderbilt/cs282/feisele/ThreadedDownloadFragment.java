@@ -56,7 +56,7 @@ public class ThreadedDownloadFragment extends LifecycleLoggingFragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		super.onCreateView(inflater, container, savedInstanceState);
+		super.onCreateView(inflater, container, savedInstanceState, false);
 		this.setRetainInstance(true);
 
 		final View result = inflater.inflate(R.layout.downloaded_image,

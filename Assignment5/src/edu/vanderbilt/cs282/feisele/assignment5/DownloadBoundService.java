@@ -9,7 +9,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.UnknownHostException;
 
-import edu.vanderbilt.cs282.feisele.R;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import android.annotation.TargetApi;
 import android.app.Service;
@@ -18,10 +19,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
-import android.util.Log;
 
+/**
+ * The parent class for performing the work. The child classes implement the
+ * specific communication mechanism.
+ * 
+ * @author "Fred Eisele" <phreed@gmail.com>
+ */
 public abstract class DownloadBoundService extends LifecycleLoggingService {
-	static private final String TAG = "Threaded Download Service";
+	static private final Logger logger = LoggerFactory.getLogger("class.service.download.bound");
 
 	static protected final int MAXIMUM_SIZE = 100;
 
@@ -35,7 +41,7 @@ public abstract class DownloadBoundService extends LifecycleLoggingService {
 	 */
 	protected Bitmap downloadBitmap(Uri uri) throws FailedDownload,
 			FileNotFoundException, IOException {
-		Log.d(TAG, "downloadBitmap:");
+		logger.debug("downloadBitmap:");
 		final Bitmap bitmap;
 		try {
 			final String scheme = uri.getScheme();
@@ -53,11 +59,8 @@ public abstract class DownloadBoundService extends LifecycleLoggingService {
 				onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
 				BitmapFactory.decodeStream(detection, null, onlyBoundsOptions);
 				detection.close();
-				Log.d(TAG,
-						"bitmap size:"
-								+ Integer.toString(onlyBoundsOptions.outWidth)
-								+ " : "
-								+ Integer.toString(onlyBoundsOptions.outWidth));
+				logger.debug("bitmap size: {} : {}", 
+						onlyBoundsOptions.outWidth, onlyBoundsOptions.outWidth);
 				if (onlyBoundsOptions.outWidth == -1)
 					return null;
 				if (onlyBoundsOptions.outHeight == -1)
@@ -80,15 +83,14 @@ public abstract class DownloadBoundService extends LifecycleLoggingService {
 			} else {
 				return null;
 			}
-			Log.d(TAG, "bitmap size [" + Integer.toString(bitmap.getWidth())
-					+ " : " + Integer.toString(bitmap.getHeight()) + "]");
+			logger.debug("bitmap size [{}:{}]", bitmap.getWidth(), bitmap.getHeight());
 			return bitmap;
 		} catch (UnknownHostException ex) {
-			Log.w(TAG, "download failed bad host", ex);
+			logger.warn("download failed bad host", ex);
 			throw new FailedDownload(this.getResources().getText(
 					R.string.error_downloading_url));
 		} catch (IOException ex) {
-			Log.w(TAG, "download failed ?", ex);
+			logger.warn("download failed ?", ex);
 			throw new FailedDownload(this.getResources().getText(
 					R.string.error_downloading_url));
 		}
@@ -139,7 +141,7 @@ public abstract class DownloadBoundService extends LifecycleLoggingService {
 			}
 			return tempFile;
 		} catch (IOException ex) {
-			Log.e(TAG, "could not write bitmap file " + tempFile);
+			logger.error("could not write bitmap file {}",tempFile);
 		}
 		return null;
 	}
@@ -159,15 +161,14 @@ public abstract class DownloadBoundService extends LifecycleLoggingService {
 	 */
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.d(TAG, "onStartCommand: Received start id " + startId + ": "
-				+ intent);
+		logger.debug("onStartCommand: Received start id {}:{}", startId, intent);
 
 		final Uri uri = intent.getData();
 		if (uri == null) {
-			Log.e(TAG, "null uri provided");
+			logger.error("null uri provided");
 			return Service.START_NOT_STICKY;
 		}
-		Log.d(TAG, "process " + uri.toString());
+		logger.debug("process {}", uri);
 
 		return Service.START_NOT_STICKY;
 	}
