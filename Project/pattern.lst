@@ -1,0 +1,45 @@
+ Folks,
+
+   Here's a list of patterns that Jules has captured for Android thus
+far.  Let's chat about how we can extend this list based on what we've
+covered this semester in CS 282.
+
+Thanks,
+
+Doug
+
+1. Inversion of Control
+2. Frameworks - Component-based Systems - Interfaces
+    a. Factory - PackageManager?
+    b. Creator - LayoutInflater?
+    c. Mediator - ContentProvider?
+    d. Singleton - PackageManager
+    e.  Strategy - ...should be able to figure this one out
+    f. Component configurator - LayoutInflater?
+    g. Bridge - PackageManager?
+    h. Facade - Context
+3. Event-driven programming / listeners / MVC
+    a. GUIs
+      - MVC - View
+      - Observer - OnClickListener
+      - Memento - Bundle
+      - Flyweight - View Placeholders
+    b. Sensors
+      - Publish/Subscribe - LocationListener, SensorListener
+4. Synchronization
+    a. Future - Java Netty
+    b. Monitor - Java Objects
+5. Networking & interprocess communication
+    a. Interface Definition Languages
+      - Interpreter - AIDL Compiler
+      - Method Template - Binder Generated Stubs
+    b. Data marshalling, buffering, segmentation, identification of
+messages/boundaries
+     - Chain of Responsibility - Binder / Java Netty
+    c. Message-based RPC, object-based RPC, web services
+     - Active Object - Binder Objects
+     - Command - Intent
+     - Proxy - Binder Object Proxies
+     - Service Stub - Binder Object Interfaces
+
+

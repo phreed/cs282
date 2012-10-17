@@ -1,0 +1,16 @@
+Patterns arise when there is a resonable resolution to a set of constraints.
+The constraints can be as varied as the programming language choice with
+its attentdant paradyms, the experiences of the development team,
+the functional behaviors or performance requirements. 
+
+For example.
+Concurency is a primary constraint which can be resolved by.
+Threading
+Command Pattern
+etc.
+
+Many problems can be simplified by eliminate the concurrency 
+constraint.  For example the procedure call, synchronous 
+presumes no concurency over the call.
+
+
