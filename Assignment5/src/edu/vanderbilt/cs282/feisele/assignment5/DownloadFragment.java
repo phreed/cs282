@@ -97,7 +97,7 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	 * state of the connection and the service binding.
 	 * <p>
 	 * This cannot be implemented as a generic as there is no interface defining
-	 * the asInterface() method on the stub.  (or at least I don't know how)
+	 * the asInterface() method on the stub. (or at least I don't know how)
 	 */
 	static abstract public class DownloadServiceConnection<T> implements
 			ServiceConnection {
@@ -168,15 +168,18 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 					+ " must implement " + OnDownloadHandler.class.getName());
 		}
 
-		this.explicitBindService(DownloadFragment.syncConnection, DownloadBoundServiceSync.class);
-		this.explicitBindService(DownloadFragment.asyncConnection, DownloadBoundServiceAsync.class);
+		this.explicitBindService(DownloadFragment.syncConnection,
+				DownloadBoundServiceSync.class);
+		this.explicitBindService(DownloadFragment.asyncConnection,
+				DownloadBoundServiceAsync.class);
 	}
-	
+
 	/**
 	 * Generic helper method for binding to a service.
+	 * 
 	 * @param <T>
 	 */
-	private void explicitBindService(ServiceConnection conn, 
+	private void explicitBindService(ServiceConnection conn,
 			Class<? extends DownloadBoundService> clazz) {
 		logger.debug("bining to service explicitly {} {}", conn, clazz);
 		final Intent intent = new Intent(this.context, clazz);
@@ -287,7 +290,9 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	}
 
 	/**
-	 * Load the appropriate bitmap into the image view.
+	 * Load the appropriate bitmap into the image view. Notice that the file is
+	 * deleted after it is loaded. This is not an optimal solution but I could
+	 * not get the ParcelFileDescriptor to operate as I wanted.
 	 * 
 	 * @param bitmapFilePath
 	 */

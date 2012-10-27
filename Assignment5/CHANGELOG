@@ -2,9 +2,28 @@
 
 2012-10-19 Initial submission as Assignment5 for CS 282
 
-2012-10-xx Comments from Prof. Schmidt
+2012-10-20 Comments from Prof. Schmidt
 
-2012-10-xx Addressed comments from Prof. Schmidt
+2012-10-27 Addressed comments from Prof. Schmidt
 
-2012-10-xx Final submission
+Various code reductions:
+1) Replaced 
+  final URL url = new URL(uri.toString());
+  final InputStream is = url.openConnection().getInputStream();
+with
+  final InputStream is = new URL(uri.toString()).openStream();
+
+2) Removed the onStartCommand() from the services as it is unused.
+3) Created a DownloadServiceConnection generic class.
+4) Created a generic method for explicitly binding to services.
+
+
+Corrected errors in comments:
+1) Removed logic and comments dealing with processing of
+   URI which are not URL.
+
+Comments:
+1) Explained the reason File is used rather than ParcelFileDescriptor.
+
+2012-10-27 Final submission
 
