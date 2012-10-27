@@ -2,7 +2,7 @@ package course.examples.ContentProviders.myContentProvider;
 
 import android.app.ListActivity;
 import android.app.LoaderManager;
-import android.content.ContentResolver;
+import android.content.AsyncQueryHandler;
 import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Loader;
@@ -28,27 +28,43 @@ public class ContentProviderActivityAsync extends ListActivity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        ContentResolver cr = getContentResolver();
+        final ContentValues values = new ContentValues();
+        final Object cookie = null;
         
-        ContentValues values = new ContentValues();
-        Uri uri = null;
-
+        /**
+         * Note that the AsyncQueryHandler is created in the context of the
+         * UI thread which is a HandlerThread. AsyncQueryHandler must be
+         * instantiated in the context of a HandlerThread.
+         */
+        final AsyncQueryHandler insertHandler = new AsyncQueryHandler(getContentResolver()) {
+        	@Override
+        	public void onInsertComplete(int token, Object cookie, Uri uri) {
+        		switch (token) {
+        		case 1:
+        			this.startDelete(token, cookie, uri, (String) null, (String[]) null );
+        			break;
+        		case 2:
+        			final ContentValues values = new ContentValues();
+        		       values.put("data", "Record4");
+        		        this.startUpdate(token, cookie, uri, values, (String) null, (String[]) null);
+        			break;
+        		case 3:
+        			break;
+        			default:
+        		}
+        	}
+        };
         values.put("data", "Record1");
-        uri = cr.insert(MyContentProvider.CONTENT_URI, values);
-
+        insertHandler.startInsert(1, cookie, MyContentProvider.CONTENT_URI, values);
+       
         values.clear();
         values.put("data", "Record2");
-        uri = cr.insert(MyContentProvider.CONTENT_URI, values);
+        insertHandler.startInsert(2, cookie, MyContentProvider.CONTENT_URI, values);
         
         values.clear();
         values.put("data", "Record3");
-        uri = cr.insert(MyContentProvider.CONTENT_URI, values);
+        insertHandler.startInsert(3, cookie, MyContentProvider.CONTENT_URI, values);
         
-        cr.delete(Uri.parse(MyContentProvider.CONTENT_URI + "/1"), (String) null, (String[]) null );
-        
-        values.clear();
-        values.put("data", "Record4");
-        cr.update(Uri.parse (MyContentProvider.CONTENT_URI + "/2"), values, (String) null, (String[]) null);
 
         String[] dataColumns = {"_id","data"};
         int[] viewIDs = {R.id.idString, R.id.data};

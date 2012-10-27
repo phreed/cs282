@@ -38,8 +38,8 @@ import android.widget.Toast;
  * A fragment does not need to persist its view elements but in this
  * implementation it does.
  * <p>
- * There is a some concern of the bitmap being updated concurrently some there
- * is protection around the bitmap and its image view.
+ * There is a some concern of the bitmap being updated concurrently so there is
+ * protection around the bitmap and its image view.
  * <p>
  * The following indicate the tolerated changes.
  * <dl>
@@ -92,14 +92,20 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 
 	private OnDownloadHandler eventHandler = null;
 
-	static public class DownloadCallServiceConnection implements
+	/**
+	 * An extension to the basic connection which holds information about the
+	 * state of the connection and the service binding.
+	 * <p>
+	 * This cannot be implemented as a generic as there is no interface defining
+	 * the asInterface() method on the stub.  (or at least I don't know how)
+	 */
+	static abstract public class DownloadServiceConnection<T> implements
 			ServiceConnection {
-		public DownloadCall service;
-		public boolean isBound;
+		protected T service;
+		protected boolean isBound;
 
 		public void onServiceConnected(ComponentName className, IBinder iservice) {
 			logger.debug("call service connected");
-			this.service = DownloadCall.Stub.asInterface(iservice);
 			this.isBound = true;
 		}
 
@@ -108,25 +114,26 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		}
 	};
 
-	static private DownloadCallServiceConnection syncConnection = new DownloadCallServiceConnection();
-
-	static public class DownloadRequestServiceConnection implements
-			ServiceConnection {
-		public DownloadRequest service;
-		public boolean isBound;
-
+	/**
+	 * provide implementation for the DownloadCall class.
+	 */
+	static private DownloadServiceConnection<DownloadCall> syncConnection = new DownloadServiceConnection<DownloadCall>() {
+		@Override
 		public void onServiceConnected(ComponentName className, IBinder iservice) {
-			logger.debug("request service connected");
-			this.service = DownloadRequest.Stub.asInterface(iservice);
-			this.isBound = true;
-		}
-
-		public void onServiceDisconnected(ComponentName name) {
-			this.isBound = false;
+			super.onServiceConnected(className, iservice);
+			this.service = DownloadCall.Stub.asInterface(iservice);
 		}
 	};
-
-	static private DownloadRequestServiceConnection asyncConnection = new DownloadRequestServiceConnection();
+	/**
+	 * provide implementation for the DownloadCall class.
+	 */
+	static private DownloadServiceConnection<DownloadRequest> asyncConnection = new DownloadServiceConnection<DownloadRequest>() {
+		@Override
+		public void onServiceConnected(ComponentName className, IBinder iservice) {
+			super.onServiceConnected(className, iservice);
+			this.service = DownloadRequest.Stub.asInterface(iservice);
+		}
+	};
 
 	/**
 	 * This ensures that the controlling activity implements the callback
@@ -161,15 +168,19 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 					+ " must implement " + OnDownloadHandler.class.getName());
 		}
 
-		final Intent syncIntent = new Intent(this.context,
-				DownloadBoundServiceSync.class);
-		final Intent asyncIntent = new Intent(this.context,
-				DownloadBoundServiceAsync.class);
-
-		this.context.bindService(syncIntent, DownloadFragment.syncConnection,
-				Context.BIND_AUTO_CREATE);
-		this.context.bindService(asyncIntent, DownloadFragment.asyncConnection,
-				Context.BIND_AUTO_CREATE);
+		this.explicitBindService(DownloadFragment.syncConnection, DownloadBoundServiceSync.class);
+		this.explicitBindService(DownloadFragment.asyncConnection, DownloadBoundServiceAsync.class);
+	}
+	
+	/**
+	 * Generic helper method for binding to a service.
+	 * @param <T>
+	 */
+	private void explicitBindService(ServiceConnection conn, 
+			Class<? extends DownloadBoundService> clazz) {
+		logger.debug("bining to service explicitly {} {}", conn, clazz);
+		final Intent intent = new Intent(this.context, clazz);
+		this.context.bindService(intent, conn, Context.BIND_AUTO_CREATE);
 	}
 
 	/**

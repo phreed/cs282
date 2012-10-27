@@ -27,14 +27,22 @@ import android.os.Build;
  * @author "Fred Eisele" <phreed@gmail.com>
  */
 public abstract class DownloadBoundService extends LifecycleLoggingService {
-	static private final Logger logger = LoggerFactory.getLogger("class.service.download.bound");
+	static private final Logger logger = LoggerFactory
+			.getLogger("class.service.download.bound");
 
 	static protected final int MAXIMUM_SIZE = 100;
 
 	/**
-	 * The workhorse for the class. Download the provided image url. If there is
+	 * The workhorse for the class. Download the provided image uri. If there is
 	 * a problem an exception is raised and the calling method is expected to
 	 * handle it in an appropriate manner.
+	 * <p>
+	 * Two types of uri are handled, url and content provider uri.
+	 * <p>
+	 * The url is indicated by the
+	 * <p>
+	 * An allowance is made for a uri of a content provider, which have a shema
+	 * of "content".
 	 * 
 	 * @param uri
 	 *            the thing to download
@@ -46,44 +54,13 @@ public abstract class DownloadBoundService extends LifecycleLoggingService {
 		try {
 			final String scheme = uri.getScheme();
 			if ("http".equals(scheme)) {
-				final URL url = new URL(uri.toString());
-				final InputStream is = url.openConnection().getInputStream();
+				final InputStream is = new URL(uri.toString()).openStream();
 				bitmap = BitmapFactory.decodeStream(is);
-
-			} else if ("content".equals(scheme)) {
-				final InputStream detection = this.getContentResolver()
-						.openInputStream(uri);
-				final BitmapFactory.Options onlyBoundsOptions = new BitmapFactory.Options();
-				onlyBoundsOptions.inJustDecodeBounds = true;
-				onlyBoundsOptions.inDither = true;
-				onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
-				BitmapFactory.decodeStream(detection, null, onlyBoundsOptions);
-				detection.close();
-				logger.debug("bitmap size: {} : {}", 
-						onlyBoundsOptions.outWidth, onlyBoundsOptions.outWidth);
-				if (onlyBoundsOptions.outWidth == -1)
-					return null;
-				if (onlyBoundsOptions.outHeight == -1)
-					return null;
-
-				final int majorSize = Math.max(onlyBoundsOptions.outHeight,
-						onlyBoundsOptions.outWidth);
-				final int ratio = (majorSize < MAXIMUM_SIZE) ? 1 : (int) Math
-						.floor(majorSize / MAXIMUM_SIZE);
-
-				final BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
-				final int base2Scale = Integer.highestOneBit(ratio);
-				bitmapOptions.inSampleSize = (base2Scale < 1) ? 1 : base2Scale;
-				bitmapOptions.inDither = true;// optional
-				bitmapOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
-				final InputStream input = this.getContentResolver()
-						.openInputStream(uri);
-				bitmap = BitmapFactory.decodeStream(input, null, bitmapOptions);
-				input.close();
 			} else {
 				return null;
 			}
-			logger.debug("bitmap size [{}:{}]", bitmap.getWidth(), bitmap.getHeight());
+			logger.debug("bitmap size [{}:{}]", bitmap.getWidth(),
+					bitmap.getHeight());
 			return bitmap;
 		} catch (UnknownHostException ex) {
 			logger.warn("download failed bad host", ex);
@@ -116,11 +93,15 @@ public abstract class DownloadBoundService extends LifecycleLoggingService {
 	}
 
 	/**
-	 * In order to preserve security for this object only a file descriptor is
-	 * provided. The file is immediately deleted.
+	 * In order to preserve security for this object it would be good if only a
+	 * file descriptor were provided (the file being immediately deleted).
+	 * However, I have been unable to properly return a ParcelFileDescriptor,
+	 * therefore this method (and its calling routines) work with the file by
+	 * name. The requesting application is expected to delete the file as
+	 * needed.
 	 * 
 	 * @param bitmap
-	 * @return
+	 * @return the temporary file by name.
 	 */
 	@TargetApi(9)
 	protected File storeBitmap(Bitmap bitmap) {
@@ -141,36 +122,9 @@ public abstract class DownloadBoundService extends LifecycleLoggingService {
 			}
 			return tempFile;
 		} catch (IOException ex) {
-			logger.error("could not write bitmap file {}",tempFile);
+			logger.error("could not write bitmap file {}", tempFile);
 		}
 		return null;
-	}
-
-	/**
-	 * This method
-	 * <ol>
-	 * <li>receives the request from the application/fragment,
-	 * <li>determines which type of processing is desired
-	 * <li>calls the appropriate method with the intent.
-	 * </ol>
-	 * 
-	 * @param intent
-	 * @param flags
-	 * @param startId
-	 * @return
-	 */
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		logger.debug("onStartCommand: Received start id {}:{}", startId, intent);
-
-		final Uri uri = intent.getData();
-		if (uri == null) {
-			logger.error("null uri provided");
-			return Service.START_NOT_STICKY;
-		}
-		logger.debug("process {}", uri);
-
-		return Service.START_NOT_STICKY;
 	}
 
 }
