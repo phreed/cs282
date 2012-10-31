@@ -1,0 +1,6 @@
+This example makes use of the logback logging framework.
+logback can be configured via the "assets/logback.xml" as
+part of the android package or via the "/mnt/sdcard/logback/logback-test.xml"
+file.
+
+I am in the process of adding a test for the service and activity.

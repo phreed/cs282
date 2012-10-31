@@ -1,0 +1,11 @@
+<resources>
+
+    <string name="error_format_url">URL format error</string>
+    <string name="error_opening_default_image">error opening default image</string>
+    <string name="error_malformed_url">error malformed url</string>
+    <string name="error_downloading_url">error downloading url</string>
+    <string name="error_unbound_service">error unbound service</string>
+    <string name="message_progress_async">download starting via Asynchronous AIDL</string>
+    <string name="message_progress_sync">download starting via Synchronous AIDL</string>
+
+</resources>
