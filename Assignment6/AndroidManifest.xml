@@ -31,12 +31,14 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".DownloadBoundServiceSync"
+        <provider
+            android:name=".DownloadContentProvider"
             android:exported="false"
+            android:authorities=""
             android:process=":my_process" />
+
         <service
-            android:name=".DownloadBoundServiceAsync"
+            android:name=".DownloadService"
             android:exported="false"
             android:process=":my_process" />
     </application>

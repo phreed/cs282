@@ -13,12 +13,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.annotation.TargetApi;
-import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
+import android.os.IBinder;
+import android.os.RemoteException;
 
 /**
  * The parent class for performing the work. The child classes implement the
@@ -26,12 +27,49 @@ import android.os.Build;
  * 
  * @author "Fred Eisele" <phreed@gmail.com>
  */
-public abstract class DownloadBoundService extends LifecycleLoggingService {
+public abstract class DownloadService extends LifecycleLoggingService {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.service.download.bound");
 
 	static protected final int MAXIMUM_SIZE = 100;
 
+	// ===========================================================
+	// AIDL Implementation
+	// ===========================================================
+
+	final private DownloadRequest.Stub stub = new DownloadRequest.Stub() {
+		final DownloadService master = DownloadService.this;
+
+		public void downloadImage(Uri uri, DownloadCallback callback)
+				throws RemoteException {
+			try {
+				final Bitmap bitmap = master.downloadBitmap(uri);
+				final File bitmapFile = master.storeBitmap(bitmap);
+				callback.sendPath(bitmapFile.toString());
+
+			} catch (FileNotFoundException ex) {
+				ex.printStackTrace();
+				callback.sendFault("file not found :");
+
+			} catch (FailedDownload ex) {
+				ex.printStackTrace();
+				callback.sendFault("download failed");
+
+			} catch (IOException ex) {
+				ex.printStackTrace();
+				callback.sendFault("not implemented by this service");
+			}
+		}
+	};
+
+	/**
+	 * The onBind() is called after construction and onCreate().
+	 */
+	@Override
+	public IBinder onBind(Intent intent) {
+		logger.debug("sync service on bind");
+		return this.stub;
+	}
 	/**
 	 * The workhorse for the class. Download the provided image uri. If there is
 	 * a problem an exception is raised and the calling method is expected to

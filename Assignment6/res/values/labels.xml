@@ -1,0 +1,10 @@
+<resources>
+
+    <string name="prompt_image_url">Enter URL:</string>
+    <string name="label_run_download">Download&#10;Images</string>
+    <string name="label_reset_image">Reset&#10;Image</string>
+    <string name="label_run_query_via_query">Query&#10;via&#10;query()</string>
+    <string name="label_run_query_via_loader">Query&#10;via&#10;CursorLoader</string>
+    <string name="label_run_query_via_handler">Query&#10;via&#10;AsyncQueryHandler</string>
+
+</resources>

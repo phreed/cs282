@@ -27,22 +27,35 @@
         android:orientation="horizontal" >
 
         <Button
-            android:id="@+id/run_download_sync_aidl"
-            style="@style/Button.Style"
-            android:onClick="runDownloadSyncAidl"
-            android:text="@string/label_run_download_sync_aidl" />
-
-        <Button
-            android:id="@+id/run_download_async_aidl"
+            android:id="@+id/run_download"
             style="@style/Button.Style"
             android:onClick="runDownloadAsyncAidl"
-            android:text="@string/label_run_download_async_aidl" />
+            android:text="@string/label_run_download" />
 
         <Button
             android:id="@+id/reset_image"
             style="@style/Button.Style"
             android:onClick="resetImage"
             android:text="@string/label_reset_image" />
+        
+        <Button
+            android:id="@+id/run_query_via_query"
+            style="@style/Button.Style"
+            android:onClick="runQueryViaQuery"
+            android:text="@string/label_run_query_via_query" />
+        
+        <Button
+            android:id="@+id/run_query_via_loader"
+            style="@style/Button.Style"
+            android:onClick="runQueryViaLoader"
+            android:text="@string/label_run_query_via_loader" />
+        
+        <Button
+            android:id="@+id/run_query_via_handler"
+            style="@style/Button.Style"
+            android:onClick="runQueryViaHandler"
+            android:text="@string/label_run_query_via_handler" />
+        
     </LinearLayout>
 
     <FrameLayout

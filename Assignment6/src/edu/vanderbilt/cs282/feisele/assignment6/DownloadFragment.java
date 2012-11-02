@@ -117,16 +117,6 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	/**
 	 * provide implementation for the DownloadCall class.
 	 */
-	static private DownloadServiceConnection<DownloadCall> syncConnection = new DownloadServiceConnection<DownloadCall>() {
-		@Override
-		public void onServiceConnected(ComponentName className, IBinder iservice) {
-			super.onServiceConnected(className, iservice);
-			this.service = DownloadCall.Stub.asInterface(iservice);
-		}
-	};
-	/**
-	 * provide implementation for the DownloadCall class.
-	 */
 	static private DownloadServiceConnection<DownloadRequest> asyncConnection = new DownloadServiceConnection<DownloadRequest>() {
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder iservice) {
@@ -168,10 +158,8 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 					+ " must implement " + OnDownloadHandler.class.getName());
 		}
 
-		this.explicitBindService(DownloadFragment.syncConnection,
-				DownloadBoundServiceSync.class);
-		this.explicitBindService(DownloadFragment.asyncConnection,
-				DownloadBoundServiceAsync.class);
+		this.explicitlyBindService(DownloadFragment.asyncConnection,
+				DownloadService.class);
 	}
 
 	/**
@@ -179,8 +167,8 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	 * 
 	 * @param <T>
 	 */
-	private void explicitBindService(ServiceConnection conn,
-			Class<? extends DownloadBoundService> clazz) {
+	private void explicitlyBindService(ServiceConnection conn,
+			Class<? extends DownloadService> clazz) {
 		logger.debug("bining to service explicitly {} {}", conn, clazz);
 		final Intent intent = new Intent(this.context, clazz);
 		this.context.bindService(intent, conn, Context.BIND_AUTO_CREATE);
@@ -194,8 +182,6 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		super.onDetach();
 		this.eventHandler = null;
 
-		if (DownloadFragment.syncConnection.isBound)
-			this.context.unbindService(DownloadFragment.syncConnection);
 		if (DownloadFragment.asyncConnection.isBound)
 			this.context.unbindService(DownloadFragment.asyncConnection);
 	}
@@ -344,13 +330,6 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		this.eventHandler.onFault(errorMsg);
 	}
 
-	private void reportDownloadFault(int errorCode) {
-		if (this.eventHandler == null)
-			return;
-		this.reportDownloadFault(this.context.getResources().getString(
-				errorCode));
-	}
-
 	private void reportDownloadComplete() {
 		if (this.eventHandler == null)
 			return;
@@ -358,53 +337,9 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 	}
 
 	/**
-	 * Sync AIDL model ("Run Sync AIDL").
-	 * <p>
-	 * In this model the DownloadActivity spawns a Thread, binds to a
-	 * DownloadBoundServiceSync process, and uses a synchronous two-way AIDL
-	 * method invocation to request that this service:
-	 * <ol>
-	 * <li>download a designated bitmap file</li>
-	 * <li>store it in the</li> Android file system, and</li>
-	 * <li>use the return value from the synchronous AIDL method invocation to
-	 * return the filename back to thread, which opens the file and causes the
-	 * bitmap to be displayed on the screen.
-	 * </ol>
-	 * 
-	 * @param view
-	 */
-	public void downloadSyncAidl(final Uri uri) {
-		if (!DownloadFragment.syncConnection.isBound) {
-			logger.warn("service not bound");
-			return;
-		}
-
-		final Runnable runner = new Runnable() {
-			final DownloadFragment master = DownloadFragment.this;
-
-			public void run() {
-				logger.debug("download thread");
-
-				try {
-					final String imageFilePath = DownloadFragment.syncConnection.service
-							.downloadImage(uri);
-					master.loadBitmap(imageFilePath);
-					master.reportDownloadComplete();
-
-				} catch (RemoteException ex) {
-					master.reportDownloadFault(R.string.error_downloading_url);
-					ex.printStackTrace();
-				}
-			}
-
-		};
-		new Thread(runner, "download sync thread").start();
-	}
-
-	/**
 	 * Asynchronous AIDL model ("Run Async AIDL").
 	 * <p>
-	 * In this model the DownloadActivity binds to a DownloadBoundServiceAsync
+	 * In this model the DownloadActivity binds to a DownloadService
 	 * process and uses an asynchronous one-way AIDL method invocation to
 	 * request that this service:
 	 * <ol>

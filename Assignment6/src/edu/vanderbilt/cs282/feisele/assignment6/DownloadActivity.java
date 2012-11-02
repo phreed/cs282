@@ -25,24 +25,30 @@ import edu.vanderbilt.cs282.feisele.assignment6.DownloadFragment.OnDownloadHandl
  * Description</h2>
  * <p>
  * This assignment builds upon the various Android concurrency models from the
- * third and fourth assignments to give you experience using an Android Service
- * to download bitmap images from a web server and display them via an Activity.
- * The application has the same interface as in assignments 3 and 4 and works as
- * follows:
+ * previous assignmentsThis assignment gives you experience with several
+ * variants of an Android ContentProvider to download bitmap images from a web
+ * server and display them via an Activity that communicates to the
+ * ContentProvider via a ContentResolver. This Activity has a similar user
+ * interface as previous assignments and works as follows:
+ * 
  * <ol>
- * <li>The Activity provides a menu of buttons and displays a default image</li>
- * <li>The user is prompted to enter the URL for a new bitmap image.</li>
+ * <li>The Activity provides a menu of buttons and displays a default image
+ * (configured via the XML assets files)</li>
+ * <li>The user is prompted to enter the URL for a new bitmap image</li>
  * <li>After entering the desired URL, the user can select one of several
- * buttons that provide different ways to download the image concurrently.</li>
- * <li>Upon making the selection, a progress dialog is displayed when
- * downloading the designated image.</li>
- * <li>After the URL download has completed it will be displayed in an
- * ImageView.</li>
+ * buttons that provide different ways to download the image.</li>
+ * <li>After the URL download has completed it will be displayed in an ImageView
+ * </li>
  * <li>The user can reset the image to its default contents by clicking the
  * "Reset Image" button.</li>
+ * 
+ * </ol>
  * <p>
  * note: the default image is configured via an XML resource file and the
  * default image itself is part of the project's assets.
+ * 
+ * 
+ * 
  * 
  * <h2>Fault Handling</h2>
  * If there is a problem in the entered URL a toast is displayed indicating the
@@ -55,12 +61,39 @@ import edu.vanderbilt.cs282.feisele.assignment6.DownloadFragment.OnDownloadHandl
  * XML layout containing a TextView object that prompts for the URL of the
  * bitmap file and stores the entered URL in an EditText object.
  * <li>
- * It uses three Button objects with the labels "Run Sync AIDL",
- * "Run Async AIDL", and "Reset Image" to run the corresponding hook methods
- * that use the URL provided by the user to start a service that downloads the
- * designated bitmap file via the following two Android concurrency and response
- * models
- * 
+ * It uses five Button objects with the labels "Download File",
+ * "Query via query()", "Query via CursorLoader", "Query via AsyncQueryHandler",
+ * and "Reset Image" to run the corresponding hook methods that use the URL
+ * provided by the user to download and display the designated bitmap file as
+ * follows:
+ * <dl>
+ * <dt>Download Images</dt>
+ * <dd>Activity uses the Async AIDL model from assignment 5 to request a Bound
+ * Service download the bitmaps in the designated URL and store them in the
+ * application's internal storage. The Service should then create a URI for the
+ * file that indicates file metadata (e.g., the timestamp for when the file was
+ * downloaded represented as a long) and insert the corresponding URI for the
+ * file into the ContentProvider (defined in your AndroidManifest.xml file)
+ * along with metadata about the file . The callback AIDL method returns the URI
+ * to the Activity, which displays the URI as a Toast.</dd>
+ * <dt>Query via query()</dt>
+ * <dd>The DownloadActivity spawns a Thread (or an AsyncTask) that calls query()
+ * on the ContentResolver to request that the associated ContentProvider to
+ * provide a Cursor containing all the file(s) that match the URI back to
+ * thread, which opens the file(s) and causes the bitmap(s) to be displayed on
+ * the screen.</dd>
+ * <dt>Query via CursorLoader</dt>
+ * <dd>The DownloadActivity uses a CursorLoader to return a Cursor containing
+ * all the file(s) that match the URI back to thread, which opens the file(s)
+ * and causes the bitmap(s) to be displayed on the screen back to
+ * DownloadActivity as an onLoadFinished() callback, which opens the file(s) and
+ * causes the bitmap(s) to be displayed on the screen.</dd>
+ * <dt>Query via AsyncQueryHandler</dt>
+ * <dd>The DownloadActivity uses an AsyncQueryHandler to return a Cursor
+ * containing all the file(s) that match the URI back to thread, back to
+ * DownloadActivity as an onQueryComplete() callback, which opens the file(s)
+ * and causes the bitmap(s) to be displayed on the screen.</dd>
+ * </dl>
  * <li>
  * The service components must run in a separate process than the
  * DownloadActivity component.
@@ -76,7 +109,8 @@ import edu.vanderbilt.cs282.feisele.assignment6.DownloadFragment.OnDownloadHandl
  */
 public class DownloadActivity extends LifecycleLoggingActivity implements
 		OnDownloadHandler {
-	static private final Logger logger = LoggerFactory.getLogger("class.activity.download");
+	static private final Logger logger = LoggerFactory
+			.getLogger("class.activity.download");
 
 	private EditText urlEditText = null;
 
@@ -103,7 +137,7 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.aidl_service_download);
+		setContentView(R.layout.main_download);
 
 		this.urlEditText = (EditText) findViewById(R.id.edit_image_url);
 
@@ -299,23 +333,6 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	public void resetImage(View view) {
 		logger.debug("resetImage");
 		this.imageFragment.resetImage(view);
-	}
-
-	/**
-	 * Sync AIDL model ("Run Sync AIDL").
-	 * 
-	 * @param view
-	 */
-	public void runDownloadSyncAidl(View view) {
-		logger.debug("runDownloadSyncAidl");
-		final Uri uri = this.getValidUrlFromWidget();
-		if (uri == null)
-			return;
-
-		this.imageFragment.downloadSyncAidl(uri);
-
-		this.startProgress(this.getResources().getText(
-				R.string.message_progress_sync));
 	}
 
 	/**
