@@ -13,4 +13,7 @@ Many problems can be simplified by eliminate the concurrency
 constraint.  For example the procedure call, synchronous 
 presumes no concurency over the call.
 
+Theory of Constraints
+TRIZ
+Nature of Order
 

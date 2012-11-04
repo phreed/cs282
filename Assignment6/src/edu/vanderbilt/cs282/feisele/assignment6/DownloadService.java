@@ -1,7 +1,6 @@
 package edu.vanderbilt.cs282.feisele.assignment6;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,18 +11,27 @@ import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import android.annotation.TargetApi;
+import android.content.ContentProviderClient;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Build;
+import android.os.Binder;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
 
 /**
  * The parent class for performing the work. The child classes implement the
  * specific communication mechanism.
+ * <p>
+ * 
+ * Given that, only one content provider is accessed and in the same process,
+ * two fast mechanisms are available for communicating with the content
+ * provider. The local binder and the content provider client.
+ * 
  * 
  * @author "Fred Eisele" <phreed@gmail.com>
  */
@@ -33,19 +41,39 @@ public abstract class DownloadService extends LifecycleLoggingService {
 
 	static protected final int MAXIMUM_SIZE = 100;
 
-	// ===========================================================
-	// AIDL Implementation
-	// ===========================================================
+	/** this intent action indicates that the bind request is for a local binder */
+	public static final boolean ACTION_LOCAL = false;
 
+	/**
+	 * The content provider client object is obtained.
+	 */
+	private ContentProviderClient cpc = null;
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		this.cpc = this.getContentResolver().acquireContentProviderClient(
+				DownloadContentProviderSchema.AUTHORITY);
+	}
+
+	/**
+	 * AIDL Stub
+	 */
 	final private DownloadRequest.Stub stub = new DownloadRequest.Stub() {
 		final DownloadService master = DownloadService.this;
 
+		/**
+		 * The download image method acquires the images and loads them into the
+		 * content provider.
+		 */
 		public void downloadImage(Uri uri, DownloadCallback callback)
 				throws RemoteException {
 			try {
 				final Bitmap bitmap = master.downloadBitmap(uri);
-				final File bitmapFile = master.storeBitmap(bitmap);
-				callback.sendPath(bitmapFile.toString());
+
+				master.storeBitmap(uri, bitmap);
+
+				callback.sendPath(uri.toString());
 
 			} catch (FileNotFoundException ex) {
 				ex.printStackTrace();
@@ -68,8 +96,23 @@ public abstract class DownloadService extends LifecycleLoggingService {
 	@Override
 	public IBinder onBind(Intent intent) {
 		logger.debug("sync service on bind");
+		if (DownloadService.ACTION_LOCAL) {
+			return this.localBinder;
+		}
 		return this.stub;
 	}
+
+	/**
+	 * Used when making local connections to the service.
+	 */
+	private final IBinder localBinder = new LocalBinder();
+
+	public class LocalBinder extends Binder {
+		DownloadService getService() {
+			return DownloadService.this;
+		}
+	}
+
 	/**
 	 * The workhorse for the class. Download the provided image uri. If there is
 	 * a problem an exception is raised and the calling method is expected to
@@ -111,6 +154,29 @@ public abstract class DownloadService extends LifecycleLoggingService {
 		}
 	}
 
+	protected void storeBitmap(final Uri uri, final Bitmap bitmap) {
+		try {
+			final ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
+			bitmap.compress(Bitmap.CompressFormat.JPEG, 40, outBytes);
+
+			final ContentValues cv = new ContentValues();
+			cv.put(ImageTable.URI.title, uri.toString());
+			final Uri tupleUri = this.cpc.insert(ImageTable.CONTENT_URI, cv);
+			final ParcelFileDescriptor pfd = this.cpc.openFile(tupleUri, "w");
+
+			final FileOutputStream fileOutputStream = new FileOutputStream(
+					pfd.getFileDescriptor());
+			fileOutputStream.write(outBytes.toByteArray());
+			fileOutputStream.close();
+			outBytes.close();
+
+		} catch (IOException ex) {
+			logger.error("could not write bitmap file {}", uri, ex);
+		} catch (RemoteException ex) {
+			logger.error("remote exception write bitmap file {}", uri, ex);
+		}
+	}
+
 	/**
 	 * An exception class used when there is a problem with the download.
 	 */
@@ -128,41 +194,6 @@ public abstract class DownloadService extends LifecycleLoggingService {
 			super();
 			this.msg = msg;
 		}
-	}
-
-	/**
-	 * In order to preserve security for this object it would be good if only a
-	 * file descriptor were provided (the file being immediately deleted).
-	 * However, I have been unable to properly return a ParcelFileDescriptor,
-	 * therefore this method (and its calling routines) work with the file by
-	 * name. The requesting application is expected to delete the file as
-	 * needed.
-	 * 
-	 * @param bitmap
-	 * @return the temporary file by name.
-	 */
-	@TargetApi(9)
-	protected File storeBitmap(Bitmap bitmap) {
-		final File cacheDir = this.getCacheDir();
-		File tempFile = null;
-		try {
-			tempFile = File.createTempFile("download", "tmp", cacheDir);
-			final ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
-			bitmap.compress(Bitmap.CompressFormat.JPEG, 40, outBytes);
-
-			final FileOutputStream fo = new FileOutputStream(tempFile);
-			fo.write(outBytes.toByteArray());
-			fo.close();
-			outBytes.close();
-			if (Build.VERSION.SDK_INT > Build.VERSION_CODES.FROYO) {
-				tempFile.setReadable(true, false);
-				tempFile.setWritable(true, false);
-			}
-			return tempFile;
-		} catch (IOException ex) {
-			logger.error("could not write bitmap file {}", tempFile);
-		}
-		return null;
 	}
 
 }
