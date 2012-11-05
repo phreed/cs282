@@ -135,10 +135,14 @@ public class DownloadContentProvider extends LLContentProvider {
 		switch (token) {
 		case ImageTable.PATH_FOR_ID_TOKEN: {
 			final List<String> segments = uri.getPathSegments();
-			final File imageFile = new File(this.imageDirectory, segments.get(1));
-			logger.info("image file mode={} path={}, uri={}", imode, imageFile, uri);
+			final File imageFile = new File(this.imageDirectory,
+					segments.get(1));
+			logger.info("image file mode={} path={}, uri={}",
+					Integer.toHexString(imode), imageFile, uri);
 			try {
-				imageFile.createNewFile();
+				if (!imageFile.exists()) {
+					imageFile.createNewFile();
+				}
 				return ParcelFileDescriptor.open(imageFile, imode);
 			} catch (FileNotFoundException ex) {
 				logger.error("could not open file {}", imageFile, ex);
@@ -171,7 +175,8 @@ public class DownloadContentProvider extends LLContentProvider {
 			 */
 			final SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
 			builder.setTables(ImageTable.NAME);
-			return builder.query(db, null, null, null, null, null, null);
+			return builder.query(db, null, null, null, null, null,
+					ImageTable.ID.title + " DESC");
 		}
 		default:
 			return null;

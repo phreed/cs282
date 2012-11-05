@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.app.ProgressDialog;
+import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,6 +18,7 @@ import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
 import edu.vanderbilt.cs282.feisele.assignment6.DownloadFragment.OnDownloadHandler;
 
 /**
@@ -346,6 +348,8 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	 */
 	public void runQueryViaQuery(View view) {
 		logger.debug("run query via query()");
+		final Cursor cursor = this.getContentResolver().query(ImageTable.CONTENT_URI, null, null, null, null);
+		this.imageFragment.loadBitmap(cursor);
 	}
 
 	/**
@@ -361,6 +365,8 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	 */
 	public void runQueryViaLoader(View view) {
 		logger.debug("run query via content loader");
+		final Cursor cursor = this.getContentResolver().query(ImageTable.CONTENT_URI, null, null, null, null);
+		this.imageFragment.loadBitmap(cursor);
 	}
 
 	/**
@@ -375,6 +381,8 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	 */
 	public void runQueryViaHandler(View view) {
 		logger.debug("run query via async query handler");
+		final Cursor cursor = this.getContentResolver().query(ImageTable.CONTENT_URI, null, null, null, null);
+		this.imageFragment.loadBitmap(cursor);
 	}
 
 }

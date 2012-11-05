@@ -1,7 +1,5 @@
 package edu.vanderbilt.cs282.feisele.assignment6;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,11 +10,13 @@ import org.slf4j.LoggerFactory;
 
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -29,6 +29,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
 
 /**
  * The Fragment is the android user interface component. Fragments can have a
@@ -282,41 +283,40 @@ public class DownloadFragment extends LLFragment {
 	 * 
 	 * @param bitmapFilePath
 	 */
-	public void loadBitmap(File bitmapFile) {
-		if (bitmapFile == null) {
-			logger.error("null file");
+	public void loadBitmap(Cursor cursor) {
+		if (cursor == null) {
+			logger.error("null cursor");
 			return;
 		}
 		InputStream fileStream = null;
-		try {
-			fileStream = new FileInputStream(bitmapFile);
-			final Bitmap bitmap = BitmapFactory.decodeStream(fileStream);
-			this.setBitmap(bitmap);
-		} catch (FileNotFoundException ex) {
-			logger.error("could not load file " + bitmapFile, ex);
-		} finally {
-			if (fileStream != null)
-				try {
-					fileStream.close();
-				} catch (IOException e) {
-					logger.error("could not close file " + bitmapFile);
+		for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+			try {
+				final int tupleId = cursor.getInt(cursor
+						.getColumnIndex(ImageTable.ID.title));
+				final Uri tupleUri = ContentUris.withAppendedId(
+						ImageTable.CONTENT_URI, tupleId);
+				fileStream = this.context.getContentResolver().openInputStream(tupleUri);
+				final Bitmap bitmap = BitmapFactory.decodeStream(fileStream);
+				if (bitmap == null) {
+					logger.error("null bitmap returned {}", tupleUri);
+					return;
 				}
+				logger.trace("bitmap meta-data {}x{}", bitmap.getHeight(), bitmap.getWidth());
+				this.setBitmap(bitmap);
+				
+				return; // just do one for now
+			} catch (FileNotFoundException ex) {
+				logger.error("could not load file {}", cursor, ex);
+			} finally {
+				if (fileStream != null)
+					try {
+						fileStream.close();
+					} catch (IOException ex) {
+						logger.error("could not close file {}", cursor, ex);
+					}
+			}
 		}
-		bitmapFile.delete();
-	}
-
-	/**
-	 * The file path as a string.
-	 * 
-	 * @param imageFilePath
-	 */
-	public void loadBitmap(String imageFilePath) {
-		if (imageFilePath == null) {
-			logger.error("null file path");
-			return;
-		}
-		final File bitmapFile = new File(imageFilePath);
-		this.loadBitmap(bitmapFile);
+		cursor.close();
 	}
 
 	/**
@@ -339,9 +339,9 @@ public class DownloadFragment extends LLFragment {
 	/**
 	 * Asynchronous AIDL model ("Run Async AIDL").
 	 * <p>
-	 * In this model the DownloadActivity binds to a DownloadService
-	 * process and uses an asynchronous one-way AIDL method invocation to
-	 * request that this service:
+	 * In this model the DownloadActivity binds to a DownloadService process and
+	 * uses an asynchronous one-way AIDL method invocation to request that this
+	 * service:
 	 * <ol>
 	 * <li>download a designated bitmap file,</li>
 	 * <li>store it in the Android file system, and</li>
