@@ -1,16 +1,15 @@
 package edu.vanderbilt.cs282.feisele.assignment6;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.content.ComponentName;
-import android.content.ContentProvider;
 import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -21,7 +20,7 @@ import android.os.ParcelFileDescriptor;
 import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
 import edu.vanderbilt.cs282.feisele.assignment6.DownloadService.LocalBinder;
 
-public class DownloadContentProvider extends ContentProvider {
+public class DownloadContentProvider extends LLContentProvider {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.provider.download");
 
@@ -53,22 +52,26 @@ public class DownloadContentProvider extends ContentProvider {
 	};
 
 	private DownloadDatabase db = null;
-	private File cacheDir = null;
+	private File imageDirectory = null;
 
 	@Override
 	public boolean onCreate() {
-		final Intent serviceIntent = new Intent(this.getContext(),
-				DownloadService.class);
-		this.getContext().bindService(serviceIntent, this.serviceConn,
-				Context.BIND_AUTO_CREATE);
+		super.onCreate();
+		/*
+		 * final Intent serviceIntent = new Intent(this.getContext(),
+		 * DownloadService.class); this.getContext().bindService(serviceIntent,
+		 * this.serviceConn, Context.BIND_AUTO_CREATE);
+		 */
 		this.db = DownloadDatabase.newInstance(this.getContext());
 
-		this.cacheDir = this.getContext().getCacheDir();
+		this.imageDirectory = this.getContext().getCacheDir();
 		return true;
 	}
 
 	@Override
 	public String getType(Uri uri) {
+		super.getType(uri);
+
 		final int match = DownloadContentProviderSchema.URI_MATCHER.match(uri);
 		switch (match) {
 		case ImageTable.PATH_TOKEN:
@@ -87,6 +90,8 @@ public class DownloadContentProvider extends ContentProvider {
 	 */
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
+		super.insert(uri, values);
+
 		final SQLiteDatabase db = this.db.getWritableDatabase();
 		int token = DownloadContentProviderSchema.URI_MATCHER.match(uri);
 		switch (token) {
@@ -103,9 +108,60 @@ public class DownloadContentProvider extends ContentProvider {
 		}
 	}
 
+	/**
+	 * This method is used to receive images. It is possible to save the images
+	 * in the sqlite database but this content provider places them in files.
+	 * The problem with this approach is that it requires more effort to delete
+	 * the files corresponding to the tuple.
+	 */
+	@Override
+	public ParcelFileDescriptor openFile(Uri uri, String mode) {
+		super.openFile(uri, mode);
+		int imode = 0;
+		try {
+			if (mode.contains("w")) {
+				imode |= ParcelFileDescriptor.MODE_WRITE_ONLY;
+			}
+			if (mode.contains("r")) {
+				imode |= ParcelFileDescriptor.MODE_READ_ONLY;
+			}
+			if (mode.contains("+")) {
+				imode |= ParcelFileDescriptor.MODE_APPEND;
+			}
+		} finally {
+		}
+
+		int token = DownloadContentProviderSchema.URI_MATCHER.match(uri);
+		switch (token) {
+		case ImageTable.PATH_FOR_ID_TOKEN: {
+			final List<String> segments = uri.getPathSegments();
+			final File imageFile = new File(this.imageDirectory, segments.get(1));
+			logger.info("image file mode={} path={}, uri={}", imode, imageFile, uri);
+			try {
+				imageFile.createNewFile();
+				return ParcelFileDescriptor.open(imageFile, imode);
+			} catch (FileNotFoundException ex) {
+				logger.error("could not open file {}", imageFile, ex);
+			} catch (IOException ex) {
+				logger.error("could not create file {}", imageFile, ex);
+			}
+		}
+			break;
+		default: {
+			throw new UnsupportedOperationException("URI: " + uri
+					+ " not supported.");
+		}
+		}
+
+		logger.error("could not open file=<{}>", uri);
+		return null;
+	}
+
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
+		super.query(uri, projection, selection, selectionArgs, sortOrder);
+
 		final SQLiteDatabase db = this.db.getReadableDatabase();
 		final int match = DownloadContentProviderSchema.URI_MATCHER.match(uri);
 		switch (match) {
@@ -122,46 +178,14 @@ public class DownloadContentProvider extends ContentProvider {
 		}
 	}
 
-	/**
-	 * This method is used to receive images. It is possible to save the images
-	 * in the sqlite database but this content provider places them in files.
-	 * The problem with this approach is that it requires more effort to delete
-	 * the files corresponding to the tuple.
-	 */
-	@Override
-	public ParcelFileDescriptor openFile(Uri uri, String mode) {
-		File tempFile = null;
-		try {
-			
-			tempFile = File.createTempFile("download", "tmp", this.cacheDir);
-
-			int imode = 0;
-			if (mode.contains("w")) {
-				imode |= ParcelFileDescriptor.MODE_WRITE_ONLY;
-
-			}
-			if (mode.contains("r")) {
-				imode |= ParcelFileDescriptor.MODE_READ_ONLY;
-			}
-			if (mode.contains("+")) {
-				imode |= ParcelFileDescriptor.MODE_APPEND;
-			}
-			return ParcelFileDescriptor.open(tempFile, imode);
-
-		} catch (IOException ex) {
-			logger.error("could not write bitmap file {}", tempFile);
-		}
-		return null;
-	}
-
 	@Override
 	public int update(Uri uri, ContentValues values, String selection,
 			String[] selectionArgs) {
-		return 0;
+		return super.update(uri, values, selection, selectionArgs);
 	}
 
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
-		return 0;
+		return super.delete(uri, selection, selectionArgs);
 	}
 }

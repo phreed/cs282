@@ -53,7 +53,7 @@ import android.widget.Toast;
  * @author "Fred Eisele" <phreed@gmail.com>
  * 
  */
-public class DownloadFragment extends LifecycleLoggingFragment {
+public class DownloadFragment extends LLFragment {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.fragment.download");
 
@@ -372,7 +372,6 @@ public class DownloadFragment extends LifecycleLoggingFragment {
 		private DownloadFragment master = DownloadFragment.this;
 
 		public void sendPath(String imageFilePath) throws RemoteException {
-			master.loadBitmap(imageFilePath);
 			master.reportDownloadComplete();
 		}
 

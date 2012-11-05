@@ -29,7 +29,7 @@
         <Button
             android:id="@+id/run_download"
             style="@style/Button.Style"
-            android:onClick="runDownloadAsyncAidl"
+            android:onClick="runDownload"
             android:text="@string/label_run_download" />
 
         <Button

@@ -14,7 +14,7 @@ import android.support.v4.app.FragmentActivity;
  * 
  * @author "Fred Eisele" <phreed@gmail.com>
  */
-public abstract class LifecycleLoggingActivity extends FragmentActivity {
+public abstract class LLActivity extends FragmentActivity {
 	static private final Logger logger = LoggerFactory.getLogger("class.logging.activity");
 
 	@Override

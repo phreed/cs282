@@ -64,36 +64,9 @@ import edu.vanderbilt.cs282.feisele.assignment6.DownloadFragment.OnDownloadHandl
  * It uses five Button objects with the labels "Download File",
  * "Query via query()", "Query via CursorLoader", "Query via AsyncQueryHandler",
  * and "Reset Image" to run the corresponding hook methods that use the URL
- * provided by the user to download and display the designated bitmap file as
- * follows:
- * <dl>
- * <dt>Download Images</dt>
- * <dd>Activity uses the Async AIDL model from assignment 5 to request a Bound
- * Service download the bitmaps in the designated URL and store them in the
- * application's internal storage. The Service should then create a URI for the
- * file that indicates file metadata (e.g., the timestamp for when the file was
- * downloaded represented as a long) and insert the corresponding URI for the
- * file into the ContentProvider (defined in your AndroidManifest.xml file)
- * along with metadata about the file . The callback AIDL method returns the URI
- * to the Activity, which displays the URI as a Toast.</dd>
- * <dt>Query via query()</dt>
- * <dd>The DownloadActivity spawns a Thread (or an AsyncTask) that calls query()
- * on the ContentResolver to request that the associated ContentProvider to
- * provide a Cursor containing all the file(s) that match the URI back to
- * thread, which opens the file(s) and causes the bitmap(s) to be displayed on
- * the screen.</dd>
- * <dt>Query via CursorLoader</dt>
- * <dd>The DownloadActivity uses a CursorLoader to return a Cursor containing
- * all the file(s) that match the URI back to thread, which opens the file(s)
- * and causes the bitmap(s) to be displayed on the screen back to
- * DownloadActivity as an onLoadFinished() callback, which opens the file(s) and
- * causes the bitmap(s) to be displayed on the screen.</dd>
- * <dt>Query via AsyncQueryHandler</dt>
- * <dd>The DownloadActivity uses an AsyncQueryHandler to return a Cursor
- * containing all the file(s) that match the URI back to thread, back to
- * DownloadActivity as an onQueryComplete() callback, which opens the file(s)
- * and causes the bitmap(s) to be displayed on the screen.</dd>
- * </dl>
+ * provided by the user to download and display the designated bitmap file using
+ * the appropriate methods.
+ * 
  * <li>
  * The service components must run in a separate process than the
  * DownloadActivity component.
@@ -107,8 +80,7 @@ import edu.vanderbilt.cs282.feisele.assignment6.DownloadFragment.OnDownloadHandl
  * @author "Fred Eisele" <phreed@gmail.com>
  * 
  */
-public class DownloadActivity extends LifecycleLoggingActivity implements
-		OnDownloadHandler {
+public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.activity.download");
 
@@ -336,11 +308,21 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 	}
 
 	/**
-	 * Asynchronous AIDL model ("Run Async AIDL").
+	 * Download Images
+	 * <p>
+	 * Activity uses the Async AIDL model from assignment 5 to request a Bound
+	 * Service download the bitmaps in the designated URL and store them in the
+	 * application's internal storage. The Service should then create a URI for
+	 * the file that indicates file metadata (e.g., the timestamp for when the
+	 * file was downloaded represented as a long) and insert the corresponding
+	 * URI for the file into the ContentProvider (defined in your
+	 * AndroidManifest.xml file) along with metadata about the file . The
+	 * callback AIDL method returns the URI to the Activity, which displays the
+	 * URI as a Toast.</dd>
 	 * 
 	 * @param view
 	 */
-	public void runDownloadAsyncAidl(View view) {
+	public void runDownload(View view) {
 		logger.debug("runDownloadAsyncAidl");
 		final Uri uri = this.getValidUrlFromWidget();
 		if (uri == null)
@@ -349,6 +331,50 @@ public class DownloadActivity extends LifecycleLoggingActivity implements
 
 		this.startProgress(this.getResources().getText(
 				R.string.message_progress_async));
+	}
+
+	/**
+	 * Query via query()
+	 * <p>
+	 * The DownloadActivity spawns a Thread (or an AsyncTask) that calls query()
+	 * on the ContentResolver to request that the associated ContentProvider to
+	 * provide a Cursor containing all the file(s) that match the URI back to
+	 * thread, which opens the file(s) and causes the bitmap(s) to be displayed
+	 * on the screen.
+	 * 
+	 * @param view
+	 */
+	public void runQueryViaQuery(View view) {
+		logger.debug("run query via query()");
+	}
+
+	/**
+	 * Query via CursorLoader
+	 * <p>
+	 * The DownloadActivity uses a CursorLoader to return a Cursor containing
+	 * all the file(s) that match the URI back to thread, which opens the
+	 * file(s) and causes the bitmap(s) to be displayed on the screen back to
+	 * DownloadActivity as an onLoadFinished() callback, which opens the file(s)
+	 * and causes the bitmap(s) to be displayed on the screen.
+	 * 
+	 * @param view
+	 */
+	public void runQueryViaLoader(View view) {
+		logger.debug("run query via content loader");
+	}
+
+	/**
+	 * Query via AsyncQueryHandler
+	 * <p>
+	 * The DownloadActivity uses an AsyncQueryHandler to return a Cursor
+	 * containing all the file(s) that match the URI back to thread, back to
+	 * DownloadActivity as an onQueryComplete() callback, which opens the
+	 * file(s) and causes the bitmap(s) to be displayed on the screen.
+	 * 
+	 * @param view
+	 */
+	public void runQueryViaHandler(View view) {
+		logger.debug("run query via async query handler");
 	}
 
 }

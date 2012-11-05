@@ -35,9 +35,9 @@ import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.Im
  * 
  * @author "Fred Eisele" <phreed@gmail.com>
  */
-public abstract class DownloadService extends LifecycleLoggingService {
+public class DownloadService extends LLService {
 	static private final Logger logger = LoggerFactory
-			.getLogger("class.service.download.bound");
+			.getLogger("class.service.download");
 
 	static protected final int MAXIMUM_SIZE = 100;
 
@@ -68,6 +68,8 @@ public abstract class DownloadService extends LifecycleLoggingService {
 		 */
 		public void downloadImage(Uri uri, DownloadCallback callback)
 				throws RemoteException {
+			logger.info("download request received {}", uri);
+
 			try {
 				final Bitmap bitmap = master.downloadBitmap(uri);
 
@@ -76,15 +78,15 @@ public abstract class DownloadService extends LifecycleLoggingService {
 				callback.sendPath(uri.toString());
 
 			} catch (FileNotFoundException ex) {
-				ex.printStackTrace();
+				logger.info("file not found ", ex);
 				callback.sendFault("file not found :");
 
 			} catch (FailedDownload ex) {
-				ex.printStackTrace();
+				logger.info("download failed ", ex);
 				callback.sendFault("download failed");
 
 			} catch (IOException ex) {
-				ex.printStackTrace();
+				logger.info("io failed ", ex);
 				callback.sendFault("not implemented by this service");
 			}
 		}
@@ -145,11 +147,11 @@ public abstract class DownloadService extends LifecycleLoggingService {
 			return bitmap;
 		} catch (UnknownHostException ex) {
 			logger.warn("download failed bad host", ex);
-			throw new FailedDownload(this.getResources().getText(
+			throw new FailedDownload(uri, this.getResources().getText(
 					R.string.error_downloading_url));
 		} catch (IOException ex) {
 			logger.warn("download failed ?", ex);
-			throw new FailedDownload(this.getResources().getText(
+			throw new FailedDownload(uri, this.getResources().getText(
 					R.string.error_downloading_url));
 		}
 	}
@@ -183,15 +185,19 @@ public abstract class DownloadService extends LifecycleLoggingService {
 	public static class FailedDownload extends Exception {
 		private static final long serialVersionUID = 6673968049922918951L;
 
+		final public Uri uri;
 		final public CharSequence msg;
 
 		@Override
 		public String getMessage() {
-			return new StringBuilder().append(this.msg).toString();
+			return new StringBuilder().append("uri=<").append(this.uri)
+					.append(">").append(" msg=<").append(this.msg).append(">")
+					.toString();
 		}
 
-		public FailedDownload(CharSequence msg) {
+		public FailedDownload(final Uri uri, final CharSequence msg) {
 			super();
+			this.uri = uri;
 			this.msg = msg;
 		}
 	}

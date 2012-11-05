@@ -1,7 +1,7 @@
 <resources>
 
     <string name="title_activity">CS282 AIDL Service Download</string>
-    <string name="app_name">ServiceAidlDownload</string>
+    <string name="app_name">ImageManager</string>
    
     <string name="describe_image">An image to display</string>
     <string name="default_image_url">http://www.dre.vanderbilt.edu/~schmidt/ka.png</string>

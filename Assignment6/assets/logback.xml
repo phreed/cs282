@@ -32,7 +32,7 @@
 
   <logger name="class" level="TRACE"/>
  
-  <root level="INFO">
+  <root level="TRACE">
     <appender-ref ref="LOGCAT" />
   </root>
 

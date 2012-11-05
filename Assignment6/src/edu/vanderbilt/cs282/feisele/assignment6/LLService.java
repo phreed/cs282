@@ -12,7 +12,7 @@ import android.content.Intent;
  * 
  * @author "Fred Eisele" <phreed@gmail.com>
  */
-public abstract class LifecycleLoggingService extends Service {
+public abstract class LLService extends Service {
 	static private final Logger logger = LoggerFactory.getLogger("class.logging.service");
 
 	/**
