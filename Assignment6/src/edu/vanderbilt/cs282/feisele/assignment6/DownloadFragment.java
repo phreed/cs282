@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.app.Activity;
+import android.content.AsyncQueryHandler;
 import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.Context;
@@ -16,6 +17,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
+
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -54,7 +59,8 @@ import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.Im
  * @author "Fred Eisele" <phreed@gmail.com>
  * 
  */
-public class DownloadFragment extends LLFragment {
+public class DownloadFragment extends LLFragment implements
+		LoaderManager.LoaderCallbacks<Cursor> {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.fragment.download");
 
@@ -67,6 +73,7 @@ public class DownloadFragment extends LLFragment {
 
 	public static Handler msgHandler = null;
 	public AtomicBoolean downloadPending = new AtomicBoolean(false);
+	private static final int IMAGE_LOADER_ID = 0x01;
 
 	private Context context = null;
 
@@ -208,6 +215,7 @@ public class DownloadFragment extends LLFragment {
 				this.bitmapImage.setImageBitmap(this.bitmap);
 			}
 		}
+		this.getLoaderManager().initLoader(IMAGE_LOADER_ID, null, this);
 		return result;
 	}
 
@@ -295,15 +303,17 @@ public class DownloadFragment extends LLFragment {
 						.getColumnIndex(ImageTable.ID.title));
 				final Uri tupleUri = ContentUris.withAppendedId(
 						ImageTable.CONTENT_URI, tupleId);
-				fileStream = this.context.getContentResolver().openInputStream(tupleUri);
+				fileStream = this.context.getContentResolver().openInputStream(
+						tupleUri);
 				final Bitmap bitmap = BitmapFactory.decodeStream(fileStream);
 				if (bitmap == null) {
 					logger.error("null bitmap returned {}", tupleUri);
 					return;
 				}
-				logger.trace("bitmap meta-data {}x{}", bitmap.getHeight(), bitmap.getWidth());
+				logger.trace("bitmap meta-data {}x{}", bitmap.getHeight(),
+						bitmap.getWidth());
 				this.setBitmap(bitmap);
-				
+
 				return; // just do one for now
 			} catch (FileNotFoundException ex) {
 				logger.error("could not load file {}", cursor, ex);
@@ -380,5 +390,44 @@ public class DownloadFragment extends LLFragment {
 		}
 
 	};
+
+	/**
+	 * User cursor loader to get the latest image from the content provider.
+	 */
+	
+	@Override
+	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+		final CursorLoader cursorLoader = new CursorLoader(this.context,
+				ImageTable.CONTENT_URI, null, null, null, null);
+		return cursorLoader;
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+		switch (loader.getId()) {
+		case IMAGE_LOADER_ID:
+			this.loadBitmap(cursor);
+		}
+	}
+
+	@Override
+	public void onLoaderReset(Loader<Cursor> loader) {
+		// swap the cursor
+	}
+	
+	/**
+	 * 
+	 */
+	public void performQueryViaHandler() {
+		final AsyncQueryHandler handler = new AsyncQueryHandler(this.context.getContentResolver()) {
+			final DownloadFragment master = DownloadFragment.this;
+			
+			@Override
+			protected void onQueryComplete (int token, Object cookie, Cursor cursor) {
+				master.loadBitmap(cursor);
+			}
+		};
+		handler.startQuery(1, null, ImageTable.CONTENT_URI, null, null, null, null);
+	}
 
 }

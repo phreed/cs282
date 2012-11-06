@@ -10,10 +10,14 @@ import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
@@ -348,8 +352,18 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	 */
 	public void runQueryViaQuery(View view) {
 		logger.debug("run query via query()");
-		final Cursor cursor = this.getContentResolver().query(ImageTable.CONTENT_URI, null, null, null, null);
-		this.imageFragment.loadBitmap(cursor);
+		final AsyncTask<DownloadActivity, Void, Void> task = new AsyncTask<DownloadActivity, Void, Void>() {
+			@Override
+			protected Void doInBackground(DownloadActivity... params) {
+				for (DownloadActivity master : params) {
+					final Cursor cursor = master.getContentResolver().query(
+							ImageTable.CONTENT_URI, null, null, null, null);
+					master.imageFragment.loadBitmap(cursor);
+				}
+				return null;
+			}
+		};
+		task.execute(this);
 	}
 
 	/**
@@ -365,8 +379,8 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	 */
 	public void runQueryViaLoader(View view) {
 		logger.debug("run query via content loader");
-		final Cursor cursor = this.getContentResolver().query(ImageTable.CONTENT_URI, null, null, null, null);
-		this.imageFragment.loadBitmap(cursor);
+		final Loader<Cursor> loader = this.imageFragment.onCreateLoader(1, null);
+		loader.startLoading();
 	}
 
 	/**
@@ -381,7 +395,8 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	 */
 	public void runQueryViaHandler(View view) {
 		logger.debug("run query via async query handler");
-		final Cursor cursor = this.getContentResolver().query(ImageTable.CONTENT_URI, null, null, null, null);
+		final Cursor cursor = this.getContentResolver().query(
+				ImageTable.CONTENT_URI, null, null, null, null);
 		this.imageFragment.loadBitmap(cursor);
 	}
 
