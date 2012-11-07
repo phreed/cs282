@@ -17,13 +17,14 @@ public enum DownloadContentProviderSchema {
 	public static final String AUTHORITY = "edu.vanderbilt.cs282.feisele.assignment6.provider";
 	/** the base uri (if more than one table is needed) */
 	private static final Uri BASE_URI = Uri.parse("content://" + AUTHORITY);
-	
+
 	/** the uri matcher for selecting the appropriate table */
 	public static final UriMatcher URI_MATCHER;
 	static {
 		URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 		URI_MATCHER.addURI(AUTHORITY, ImageTable.PATH, ImageTable.PATH_TOKEN);
-		URI_MATCHER.addURI(AUTHORITY, ImageTable.PATH_FOR_ID, ImageTable.PATH_FOR_ID_TOKEN);
+		URI_MATCHER.addURI(AUTHORITY, ImageTable.PATH_FOR_ID,
+				ImageTable.PATH_FOR_ID_TOKEN);
 	}
 
 	/**
@@ -47,7 +48,8 @@ public enum DownloadContentProviderSchema {
 		/** Other properties of the field */
 		final public String props;
 
-		private ImageTable(final String type, final String name, final String props) {
+		private ImageTable(final String type, final String name,
+				final String props) {
 			this.type = type;
 			this.title = name;
 			this.props = props;
@@ -59,15 +61,27 @@ public enum DownloadContentProviderSchema {
 				byName.put(item.title, item);
 			}
 		}
-		
+
 		public static final String NAME = "image";
 		public static final String PATH = "images";
 		public static final int PATH_TOKEN = 100;
 		public static final String PATH_FOR_ID = "images/#";
 		public static final int PATH_FOR_ID_TOKEN = 200;
-		public static final Uri CONTENT_URI = BASE_URI.buildUpon().appendPath(PATH).build();
+		public static final Uri CONTENT_URI = BASE_URI.buildUpon()
+				.appendPath(PATH).build();
 		public static final String CONTENT_TYPE_DIR = "vnd.android.cursor.dir/vnd.downloadimage.app";
 		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.downloadimage.app";
+
+	}
+
+	public enum ContentAction {
+		DELETE_BY_URI(ImageTable.URI.title + "=?");
+
+		final String code;
+
+		private ContentAction(String code) {
+			this.code = code;
+		}
 	}
 
 }

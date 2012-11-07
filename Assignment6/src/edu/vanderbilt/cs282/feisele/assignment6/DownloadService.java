@@ -8,6 +8,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.UnknownHostException;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +25,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ContentAction;
 import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
 
 /**
@@ -71,11 +76,8 @@ public class DownloadService extends LLService {
 			logger.info("download request received {}", uri);
 
 			try {
-				final Bitmap bitmap = master.downloadBitmap(uri);
-
-				master.storeBitmap(uri, bitmap);
-
-				callback.sendPath(uri.toString());
+				final String title = master.downloadImages(master, uri);
+				callback.sendPath(title);
 
 			} catch (FileNotFoundException ex) {
 				logger.info("file not found ", ex);
@@ -120,31 +122,52 @@ public class DownloadService extends LLService {
 	 * a problem an exception is raised and the calling method is expected to
 	 * handle it in an appropriate manner.
 	 * <p>
-	 * Two types of uri are handled, url and content provider uri.
+	 * The uri is presumed to be an http page containing elements like the
+	 * following: <code>
+	 * <img 
+	 *   src="http://somethingscrawlinginmyhair.com/wp-content/uploads/2012/10/Wasp.spider.and_.nearby.male_.jpg" 
+	 *   alt="" title="Wasp.spider.and.nearby.male" 
+	 *   width="600" 
+	 *   height="334" 
+	 *   class="alignnone size-full wp-image-7431" />
+	 *   </code>
+	 * 
 	 * <p>
 	 * The url is indicated by the
 	 * <p>
 	 * An allowance is made for a uri of a content provider, which have a shema
 	 * of "content".
 	 * 
+	 * @param master
+	 * 
 	 * @param uri
 	 *            the thing to download
 	 */
-	protected Bitmap downloadBitmap(Uri uri) throws FailedDownload,
-			FileNotFoundException, IOException {
-		logger.debug("downloadBitmap:");
-		final Bitmap bitmap;
+	protected String downloadImages(DownloadService master, Uri uri)
+			throws FailedDownload, FileNotFoundException, IOException {
+		logger.debug("download images:");
+
 		try {
 			final String scheme = uri.getScheme();
 			if ("http".equals(scheme)) {
-				final InputStream is = new URL(uri.toString()).openStream();
-				bitmap = BitmapFactory.decodeStream(is);
+				master.clearImages(uri);
+
+				final Document doc = Jsoup.connect(uri.toString()).get();
+				final String title = doc.title();
+				final Elements imageUrlSet = doc.select("img[src]");
+				for (Element imageUrl : imageUrlSet) {
+					final InputStream is = new URL(imageUrl.text())
+							.openStream();
+					final Bitmap bitmap = BitmapFactory.decodeStream(is);
+					logger.debug("bitmap size [{}:{}]", bitmap.getWidth(),
+							bitmap.getHeight());
+					master.storeBitmap(uri, bitmap);
+				}
+				return title;
 			} else {
-				return null;
+
 			}
-			logger.debug("bitmap size [{}:{}]", bitmap.getWidth(),
-					bitmap.getHeight());
-			return bitmap;
+			return uri.toString();
 		} catch (UnknownHostException ex) {
 			logger.warn("download failed bad host", ex);
 			throw new FailedDownload(uri, this.getResources().getText(
@@ -153,6 +176,21 @@ public class DownloadService extends LLService {
 			logger.warn("download failed ?", ex);
 			throw new FailedDownload(uri, this.getResources().getText(
 					R.string.error_downloading_url));
+		}
+	}
+
+	/**
+	 * clear out any prior images having the same uri.
+	 * 
+	 * @param uri
+	 */
+	private void clearImages(Uri uri) {
+		try {
+			this.cpc.delete(ImageTable.CONTENT_URI,
+					ContentAction.DELETE_BY_URI.code,
+					new String[] { uri.toString() });
+		} catch (RemoteException ex) {
+			logger.error("could not expunge the old values {}", ex);
 		}
 	}
 
