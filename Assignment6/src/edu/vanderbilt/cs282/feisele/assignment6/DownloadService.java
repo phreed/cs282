@@ -5,10 +5,16 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
 
+import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
+import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -146,37 +152,85 @@ public class DownloadService extends LLService {
 	protected String downloadImages(DownloadService master, Uri uri)
 			throws FailedDownload, FileNotFoundException, IOException {
 		logger.debug("download images:");
+		master.clearImages(uri);
 
-		try {
-			final String scheme = uri.getScheme();
-			if ("http".equals(scheme)) {
-				master.clearImages(uri);
+		final String scheme = uri.getScheme();
+		if ("http".equals(scheme)) {
+			final String mainUrl = uri.toString();
+			try {
+				final Connection channel = Jsoup.connect(mainUrl);
 
-				final Document doc = Jsoup.connect(uri.toString()).get();
+				final Document doc = channel.get();
 				final String title = doc.title();
 				final Elements imageUrlSet = doc.select("img[src]");
-				for (Element imageUrl : imageUrlSet) {
-					final InputStream is = new URL(imageUrl.text())
-							.openStream();
-					final Bitmap bitmap = BitmapFactory.decodeStream(is);
-					logger.debug("bitmap size [{}:{}]", bitmap.getWidth(),
-							bitmap.getHeight());
-					master.storeBitmap(uri, bitmap);
+				for (Element imageUrlElement : imageUrlSet) {
+					final String imageUrlStr = imageUrlElement.attr("src");
+					try {
+						final URL imageUrl = new URL(imageUrlStr);
+						final InputStream is = imageUrl.openStream();
+						final Bitmap bitmap = BitmapFactory.decodeStream(is);
+						logger.debug("bitmap size [{}:{}]", bitmap.getWidth(),
+								bitmap.getHeight());
+						master.storeBitmap(uri, bitmap);
+						
+					} catch (UnknownHostException ex) {
+						logger.warn("download failed bad host {}", imageUrlStr, ex);
+					} catch (MalformedURLException ex) {
+						logger.warn(
+								"the request URL is not a HTTP or HTTPS URL, or is otherwise malformed {}",
+								imageUrlStr, ex);
+					} catch (HttpStatusException ex) {
+						logger.warn(
+								"the response is not OK and HTTP response errors are not ignored {}",
+								imageUrlStr, ex);
+					} catch (UnsupportedMimeTypeException ex) {
+						logger.warn(
+								"the response mime type is not supported and those errors are not ignored {}",
+								imageUrlStr, ex);
+					} catch (SocketTimeoutException ex) {
+						logger.warn("the connection times out {}", imageUrlStr, ex);
+					} catch (IOException ex) {
+						logger.warn("download failed  {}", imageUrlStr, ex);
+					}
+
 				}
 				return title;
-			} else {
 
+			} catch (UnknownHostException ex) {
+				logger.warn("download failed bad host {}", uri, ex);
+				throw new FailedDownload(uri, this.getResources().getText(
+						R.string.error_downloading_url));
+			} catch (MalformedURLException ex) {
+				logger.warn(
+						"the request URL is not a HTTP or HTTPS URL, or is otherwise malformed {}",
+						uri, ex);
+				throw new FailedDownload(uri, this.getResources().getText(
+						R.string.error_downloading_url));
+			} catch (HttpStatusException ex) {
+				logger.warn(
+						"the response is not OK and HTTP response errors are not ignored {}",
+						uri, ex);
+				throw new FailedDownload(uri, this.getResources().getText(
+						R.string.error_downloading_url));
+			} catch (UnsupportedMimeTypeException ex) {
+				logger.warn(
+						"the response mime type is not supported and those errors are not ignored {}",
+						uri, ex);
+				throw new FailedDownload(uri, this.getResources().getText(
+						R.string.error_downloading_url));
+			} catch (SocketTimeoutException ex) {
+				logger.warn("the connection times out {}", uri, ex);
+				throw new FailedDownload(uri, this.getResources().getText(
+						R.string.error_downloading_url));
+			} catch (IOException ex) {
+				logger.warn("download failed  {}", uri, ex);
+				throw new FailedDownload(uri, this.getResources().getText(
+						R.string.error_downloading_url));
 			}
-			return uri.toString();
-		} catch (UnknownHostException ex) {
-			logger.warn("download failed bad host", ex);
-			throw new FailedDownload(uri, this.getResources().getText(
-					R.string.error_downloading_url));
-		} catch (IOException ex) {
-			logger.warn("download failed ?", ex);
-			throw new FailedDownload(uri, this.getResources().getText(
-					R.string.error_downloading_url));
+		} else {
+
 		}
+		return uri.toString();
 	}
 
 	/**

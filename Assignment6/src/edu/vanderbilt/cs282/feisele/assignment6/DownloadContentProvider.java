@@ -86,7 +86,7 @@ public class DownloadContentProvider extends LLContentProvider {
 
 	/**
 	 * The downloaded image file is large and may not fit in the cursor values.
-	 * Therefore the image is placed into a temporary file (see openFile)
+	 * Therefore the image is placed into a temporary file (see openFile) rather than in the database.
 	 */
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
@@ -97,7 +97,7 @@ public class DownloadContentProvider extends LLContentProvider {
 		switch (token) {
 		case ImageTable.PATH_TOKEN: {
 			long id = db.insert(ImageTable.NAME, null, values);
-			getContext().getContentResolver().notifyChange(uri, null);
+			this.getContext().getContentResolver().notifyChange(uri, null);
 			return ImageTable.CONTENT_URI.buildUpon()
 					.appendPath(String.valueOf(id)).build();
 		}

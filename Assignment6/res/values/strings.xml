@@ -4,7 +4,7 @@
     <string name="app_name">ImageManager</string>
    
     <string name="describe_image">An image to display</string>
-    <string name="default_image_url">http://somethingscrawlinginmyhair.com/2012/10/31/cobweb-spider-devoured-by-wasp-grub/#more-7339</string>
+    <string name="default_image_url">http://somethingscrawlinginmyhair.com/2012/10/31/cobweb-spider-devoured-by-wasp-grub</string>
     <string name="menu_settings">menu settings</string>
     <string name="dialog_progress_title">Dowloading</string>
     <string name="dialog_progress_message">downloading bitmap</string>
