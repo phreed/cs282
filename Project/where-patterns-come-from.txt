@@ -17,3 +17,31 @@ Theory of Constraints
 TRIZ
 Nature of Order
 
+=Forces=
+speed of task excution
+memory usage during task
+speed of development
+comprehesibility of algorithm
+distribution/delegation of task
+connection reliablity in environment
+collaboration type (close v. merge)
+mutablity of assumtions during task
+
+
+=Goals=
+task
+task chain
+improved throughput
+improved latency
+improved power usage
+
+
+=Steps=
+Identify pattern usage
+Identify areas where patterns develop & the forces causing them to develop
+Identify ideal solution & how the pattern approximates that solution
+
+=Framwork=
+Evaluate the framework as a collection of components supporting patterns
+
+
