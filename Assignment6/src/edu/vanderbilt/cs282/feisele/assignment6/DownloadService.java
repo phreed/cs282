@@ -14,7 +14,6 @@ import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
-import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -31,8 +30,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ContentAction;
 import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.Selection;
 
 /**
  * The parent class for performing the work. The child classes implement the
@@ -50,7 +49,8 @@ public class DownloadService extends LLService {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.service.download");
 
-	static protected final int MAXIMUM_SIZE = 100;
+	static private final int MINIMUM_WIDTH = 100;
+	static private final int MINIMUM_HEIGHT = 100;
 
 	/** this intent action indicates that the bind request is for a local binder */
 	public static final boolean ACTION_LOCAL = false;
@@ -82,8 +82,8 @@ public class DownloadService extends LLService {
 			logger.info("download request received {}", uri);
 
 			try {
-				final String title = master.downloadImages(master, uri);
-				callback.sendPath(title);
+				final String url = master.downloadImages(master, uri);
+				callback.sendPath(url);
 
 			} catch (FileNotFoundException ex) {
 				logger.info("file not found ", ex);
@@ -154,15 +154,16 @@ public class DownloadService extends LLService {
 		logger.debug("download images:");
 		master.clearImages(uri);
 
+		final String mainUrl = uri.toString();
 		final String scheme = uri.getScheme();
 		if ("http".equals(scheme)) {
-			final String mainUrl = uri.toString();
 			try {
 				final Connection channel = Jsoup.connect(mainUrl);
 
 				final Document doc = channel.get();
 				final String title = doc.title();
 				final Elements imageUrlSet = doc.select("img[src]");
+				int ordinal = 1;
 				for (Element imageUrlElement : imageUrlSet) {
 					final String imageUrlStr = imageUrlElement.attr("src");
 					try {
@@ -171,7 +172,16 @@ public class DownloadService extends LLService {
 						final Bitmap bitmap = BitmapFactory.decodeStream(is);
 						logger.debug("bitmap size [{}:{}]", bitmap.getWidth(),
 								bitmap.getHeight());
-						master.storeBitmap(uri, bitmap);
+						if (bitmap.getWidth() < MINIMUM_WIDTH) {
+							logger.warn("bitmap too narrow {} px", bitmap.getWidth());
+							continue;
+						}
+						if (bitmap.getHeight() < MINIMUM_HEIGHT) {
+							logger.warn("bitmap too short {} px", bitmap.getHeight());
+							continue;
+						}
+						master.storeBitmap(uri, ordinal, bitmap);
+						ordinal++;
 						
 					} catch (UnknownHostException ex) {
 						logger.warn("download failed bad host {}", imageUrlStr, ex);
@@ -194,7 +204,8 @@ public class DownloadService extends LLService {
 					}
 
 				}
-				return title;
+				logger.info("loaded page=<{}>", title);
+				return mainUrl;
 
 			} catch (UnknownHostException ex) {
 				logger.warn("download failed bad host {}", uri, ex);
@@ -230,7 +241,7 @@ public class DownloadService extends LLService {
 		} else {
 
 		}
-		return uri.toString();
+		return mainUrl;
 	}
 
 	/**
@@ -241,20 +252,22 @@ public class DownloadService extends LLService {
 	private void clearImages(Uri uri) {
 		try {
 			this.cpc.delete(ImageTable.CONTENT_URI,
-					ContentAction.DELETE_BY_URI.code,
+					Selection.BY_URI.code,
 					new String[] { uri.toString() });
 		} catch (RemoteException ex) {
 			logger.error("could not expunge the old values {}", ex);
 		}
 	}
 
-	protected void storeBitmap(final Uri uri, final Bitmap bitmap) {
+	protected void storeBitmap(final Uri uri, final int ordinal, final Bitmap bitmap) {
 		try {
 			final ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
 			bitmap.compress(Bitmap.CompressFormat.JPEG, 40, outBytes);
 
 			final ContentValues cv = new ContentValues();
+			cv.put(ImageTable.ORDINAL.title, ordinal);
 			cv.put(ImageTable.URI.title, uri.toString());
+			
 			final Uri tupleUri = this.cpc.insert(ImageTable.CONTENT_URI, cv);
 			final ParcelFileDescriptor pfd = this.cpc.openFile(tupleUri, "w");
 

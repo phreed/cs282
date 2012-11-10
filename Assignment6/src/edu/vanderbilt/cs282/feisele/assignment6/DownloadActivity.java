@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.app.ProgressDialog;
+import android.content.AsyncQueryHandler;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -14,7 +15,6 @@ import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -30,6 +30,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.Order;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.Selection;
 
 /**
  * 
@@ -92,8 +94,7 @@ import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.Im
  * @author "Fred Eisele" <phreed@gmail.com>
  * 
  */
-public class DownloadActivity extends LLActivity implements
-		LoaderManager.LoaderCallbacks<Cursor> {
+public class DownloadActivity extends LLActivity {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.activity.download");
 
@@ -106,6 +107,13 @@ public class DownloadActivity extends LLActivity implements
 
 	private EditText urlEditText = null;
 	private ProgressDialog progress;
+
+	private Uri activeUri = null;
+	public String getActiveUri() {
+		if (this.activeUri == null) return "";
+		return this.activeUri.toString();
+	}
+	private LoaderManager.LoaderCallbacks<Cursor> imageCursorLoader = null;
 
 	/**
 	 * An extension to the basic connection which holds information about the
@@ -172,8 +180,10 @@ public class DownloadActivity extends LLActivity implements
 		this.explicitlyBindService(DownloadActivity.asyncConnection,
 				DownloadService.class);
 
+		this.imageCursorLoader = new MyCursorLoader(this);
+
 		this.getSupportLoaderManager().initLoader(IMAGE_LOADER_ID,
-				savedInstanceState, this);
+				savedInstanceState, this.imageCursorLoader);
 	}
 
 	final static String PROGRESS_RUNNING_STATE_KEY = "progress_running_state_key";
@@ -186,6 +196,7 @@ public class DownloadActivity extends LLActivity implements
 	@Override
 	public void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
+		this.activeUri = Uri.parse(savedInstanceState.getString("activeUri"));
 		final boolean wasProgressRunning = savedInstanceState
 				.getBoolean(PROGRESS_RUNNING_STATE_KEY);
 		if (wasProgressRunning)
@@ -196,6 +207,7 @@ public class DownloadActivity extends LLActivity implements
 	public void onSaveInstanceState(Bundle savedInstanceState) {
 		savedInstanceState.putBoolean(PROGRESS_RUNNING_STATE_KEY,
 				this.isProgressRunning());
+		savedInstanceState.putString("activeUri", this.getActiveUri());
 		super.onSaveInstanceState(savedInstanceState);
 		logger.debug("onSaveInstanceState");
 	}
@@ -227,27 +239,37 @@ public class DownloadActivity extends LLActivity implements
 	/**
 	 * User cursor loader to get the latest image from the content provider.
 	 */
+	private static class MyCursorLoader implements
+			LoaderManager.LoaderCallbacks<Cursor> {
+		private final DownloadActivity master;
 
-	@Override
-	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-		final CursorLoader cursorLoader = new CursorLoader(this,
-				ImageTable.CONTENT_URI, null, null, null, null);
-		return cursorLoader;
-	}
-
-	@Override
-	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-		switch (loader.getId()) {
-		case IMAGE_LOADER_ID:
-			this.adapter.swapCursor(cursor);
+		public MyCursorLoader(DownloadActivity master) {
+			this.master = master;
 		}
-	}
 
-	@Override
-	public void onLoaderReset(Loader<Cursor> loader) {
-		switch (loader.getId()) {
-		case IMAGE_LOADER_ID:
-			this.adapter.swapCursor(null);
+		@Override
+		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+			final CursorLoader cursorLoader = new CursorLoader(this.master,
+					ImageTable.CONTENT_URI, null, Selection.BY_URI.code,
+					new String[] { this.master.getActiveUri() },
+					Order.BY_ID.ascending());
+			return cursorLoader;
+		}
+
+		@Override
+		public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+			switch (loader.getId()) {
+			case IMAGE_LOADER_ID:
+				this.master.adapter.swapCursor(cursor);
+			}
+		}
+
+		@Override
+		public void onLoaderReset(Loader<Cursor> loader) {
+			switch (loader.getId()) {
+			case IMAGE_LOADER_ID:
+				this.master.adapter.swapCursor(null);
+			}
 		}
 	}
 
@@ -287,7 +309,7 @@ public class DownloadActivity extends LLActivity implements
 		 */
 		@Override
 		public F getItem(int position) {
-			if (cursor == null) 
+			if (cursor == null)
 				return null;
 
 			cursor.moveToPosition(position);
@@ -383,12 +405,12 @@ public class DownloadActivity extends LLActivity implements
 	/**
 	 * Progress dialog can be shut down the
 	 */
-	public void onComplete() {
+	public void onComplete(final String msg) {
 		logger.debug("onComplete");
 		this.runOnUiThread(new Runnable() {
 			final DownloadActivity master = DownloadActivity.this;
-
 			public void run() {
+				master.activeUri = Uri.parse(msg);
 				master.stopProgress();
 			}
 		});
@@ -476,7 +498,24 @@ public class DownloadActivity extends LLActivity implements
 	 * @param view
 	 */
 	public void resetImage(View view) {
-		logger.debug("resetImage");
+		logger.debug("resetDatabase");
+		final AsyncQueryHandler handler = new AsyncQueryHandler(
+				this.getContentResolver()) {
+			@Override
+			public void onDeleteComplete(int token, Object cookie, int result) {
+				logger.debug("reset complete : {} items deleted", result);
+				final DownloadActivity master = (DownloadActivity) cookie;
+				master.runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						logger.debug("default cursor swap");
+						master.adapter.swapCursor(ImageTable.DEFAULT_CURSOR);
+					}
+				});
+			}
+		};
+		handler.startDelete(1, this, ImageTable.CONTENT_URI,
+				Selection.ALL.code, null);
 	}
 
 	/**
@@ -518,28 +557,15 @@ public class DownloadActivity extends LLActivity implements
 	private final DownloadCallback.Stub callback = new DownloadCallback.Stub() {
 		private DownloadActivity master = DownloadActivity.this;
 
-		public void sendPath(String imageFilePath) throws RemoteException {
-			master.reportDownloadComplete();
+		public void sendPath(String url) throws RemoteException {
+			master.onComplete(url);
 		}
 
 		public void sendFault(String msg) throws RemoteException {
-			master.reportDownloadFault(msg);
+			master.onFault(msg);
 		}
 
 	};
-
-	/**
-	 * Report problems with downloading the image back to the parent activity.
-	 * 
-	 * @param errorMsg
-	 */
-	private void reportDownloadFault(CharSequence errorMsg) {
-		this.onFault(errorMsg);
-	}
-
-	private void reportDownloadComplete() {
-		this.onComplete();
-	}
 
 	/**
 	 * Query via query()
@@ -554,17 +580,25 @@ public class DownloadActivity extends LLActivity implements
 	 */
 	public void runQueryViaQuery(View view) {
 		logger.debug("run query via query()");
-		final AsyncTask<DownloadActivity, Void, Void> task = new AsyncTask<DownloadActivity, Void, Void>() {
-			@Override
-			protected Void doInBackground(DownloadActivity... params) {
-				for (DownloadActivity master : params) {
-					final Cursor cursor = master.getContentResolver().query(
-							ImageTable.CONTENT_URI, null, null, null, null);
-				}
-				return null;
+		final Runnable makeQuery = new Runnable() {
+			private final DownloadActivity master = DownloadActivity.this;
+
+			public void run() {
+				final Cursor cursor = master.getContentResolver().query(
+						ImageTable.CONTENT_URI, null, Selection.BY_URI.code,
+						new String[] { master.getActiveUri() },
+						Order.BY_ID.ascending());
+				master.runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						logger.debug("query cursor size=<{}>",
+								cursor.getCount());
+						master.adapter.swapCursor(cursor);
+					}
+				});
 			}
 		};
-		task.execute(this);
+		new Thread(makeQuery).start();
 	}
 
 	/**
@@ -594,8 +628,24 @@ public class DownloadActivity extends LLActivity implements
 	 */
 	public void runQueryViaHandler(View view) {
 		logger.debug("run query via async query handler");
-		final Cursor cursor = this.getContentResolver().query(
-				ImageTable.CONTENT_URI, null, null, null, null);
+		final AsyncQueryHandler handler = new AsyncQueryHandler(
+				this.getContentResolver()) {
+			@Override
+			public void onQueryComplete(int token, Object cookie,
+					final Cursor cursor) {
+				final DownloadActivity master = (DownloadActivity) cookie;
+				master.runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						master.adapter.swapCursor(cursor);
+					}
+				});
+			}
+		};
+		handler.startQuery(1, this, ImageTable.CONTENT_URI, null,
+				Selection.BY_URI.code,
+				new String[] { this.getActiveUri() },
+				Order.BY_ID.ascending());
 	}
 
 }

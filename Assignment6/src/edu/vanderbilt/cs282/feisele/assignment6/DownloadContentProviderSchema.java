@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import android.content.UriMatcher;
+import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
@@ -33,6 +35,7 @@ public enum DownloadContentProviderSchema {
 	public enum ImageTable {
 		/** The unique primary key for the table */
 		ID("INTEGER", BaseColumns._ID, "PRIMARY KEY AUTOINCREMENT"),
+		ORDINAL("INTEGER", "ordinal", null),
 		/**
 		 * This is the uri of the image in the table. There may be more than one
 		 * image with the same type. This is the source of the image.
@@ -56,10 +59,24 @@ public enum DownloadContentProviderSchema {
 		}
 
 		public static Map<String, ImageTable> byName = new HashMap<String, ImageTable>();
+		/**
+		 * The default cursor is used when the default images are to be
+		 * displayed. A null uri indicates the default cursor. The id field is
+		 * used to select from the default bitmap images.
+		 */
+		public static Cursor DEFAULT_CURSOR;
 		static {
-			for (ImageTable item : ImageTable.values()) {
+			final ImageTable[] values = ImageTable.values();
+			for (ImageTable item : values) {
 				byName.put(item.title, item);
 			}
+			final MatrixCursor matrixCursor = new MatrixCursor(new String[] {
+					ImageTable.ID.title, ImageTable.ORDINAL.title,
+					ImageTable.URI.title,
+					ImageTable.TIMESTAMP.title });
+			matrixCursor.addRow(new Object[] { 1, 1, null, 0 });
+			matrixCursor.addRow(new Object[] { 2, 2, null, 0 });
+			DEFAULT_CURSOR = matrixCursor;
 		}
 
 		public static final String NAME = "image";
@@ -72,14 +89,47 @@ public enum DownloadContentProviderSchema {
 		public static final String CONTENT_TYPE_DIR = "vnd.android.cursor.dir/vnd.downloadimage.app";
 		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.downloadimage.app";
 
+		static {
+
+		}
+
 	}
 
-	public enum ContentAction {
-		DELETE_BY_URI(ImageTable.URI.title + "=?");
+	/**
+	 * Methods to help in filling out the selection clause.
+	 */
+	public enum Selection {
+		/** select tuples matching the uri */
+		BY_URI(ImageTable.URI.title + "=?"),
+		/** select tuples matching the id */
+		BY_ID(ImageTable.ID.title + "=?"),
+		/** select all tuples */
+		ALL(null);
 
 		final String code;
 
-		private ContentAction(String code) {
+		private Selection(String code) {
+			this.code = code;
+		}
+	}
+
+	/**
+	 * Methods to help in filling out the orderBy clause.
+	 */
+	public enum Order {
+		BY_URI(ImageTable.URI.title), BY_ID(ImageTable.ID.title);
+
+		private final String code;
+
+		public String ascending() {
+			return this.code + " ASC ";
+		}
+
+		public String decending() {
+			return this.code + " DESC ";
+		}
+
+		private Order(String code) {
 			this.code = code;
 		}
 	}

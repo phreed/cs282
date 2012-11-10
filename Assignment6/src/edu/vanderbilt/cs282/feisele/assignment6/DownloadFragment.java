@@ -3,7 +3,6 @@ package edu.vanderbilt.cs282.feisele.assignment6;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +11,10 @@ import android.app.Activity;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,14 +50,12 @@ public class DownloadFragment extends LLFragment {
 			.getLogger("class.fragment.download");
 
 	/** my oldest daughter */
-	static private final String DEFAULT_PORT_IMAGE = "raquel_eisele_port_2012.jpg";
-	static private final String DEFAULT_LAND_IMAGE = "raquel_eisele_land_2012.jpg";
+	static private final String[] DEFAULT_IMAGE_SET = new String[] {
+			"raquel_eisele_port_2012.jpg", "raquel_eisele_land_2012.jpg" };
 
 	private Bitmap bitmap = null;
+	private int ordinal = 0;
 	private ImageView bitmapImage = null;
-
-	public static Handler msgHandler = null;
-	public AtomicBoolean downloadPending = new AtomicBoolean(false);
 
 	private Context context = null;
 
@@ -117,14 +112,34 @@ public class DownloadFragment extends LLFragment {
 		final View result = inflater.inflate(R.layout.downloaded_image,
 				container, false);
 		this.bitmapImage = (ImageView) result.findViewById(R.id.current_image);
-		synchronized (this.downloadPending) {
-			if (this.bitmap == null) {
-				this.resetImage(null);
-			} else {
-				this.bitmapImage.setImageBitmap(this.bitmap);
-			}
+		if (this.bitmap == null) {
+			this.resetImage(this.ordinal);
+		} else {
+			this.bitmapImage.setImageBitmap(this.bitmap);
 		}
 		return result;
+	}
+
+	/**
+	 * A new bitmap image has been obtained. Update the bitmap.
+	 * 
+	 * @param result
+	 */
+	@Override
+	public void setArguments(Bundle bundle) {
+		try {
+			final String url = bundle.getString(ImageTable.URI.title);
+			if (url == null || url.isEmpty() || url.length() < 1) {
+				this.ordinal = bundle.getInt(ImageTable.ORDINAL.title);
+				this.bitmap = null;
+				return;
+			}
+			this.loadBitmap(bundle.getInt(ImageTable.ID.title));
+		} catch (FileNotFoundException ex) {
+			logger.error("could not load file {}", bundle, ex);
+		} catch (IOException ex) {
+			logger.error("could not close file {}", bundle, ex);
+		}
 	}
 
 	/**
@@ -133,18 +148,12 @@ public class DownloadFragment extends LLFragment {
 	 * 
 	 * @param view
 	 */
-	public void resetImage(View view) {
-
+	public void resetImage(int ordinal) {
+		logger.debug("loading a default image {}", ordinal);
 		final AssetManager am = this.getActivity().getAssets();
 		final InputStream is;
 		try {
-			switch (this.getResources().getConfiguration().orientation) {
-			case Configuration.ORIENTATION_LANDSCAPE:
-				is = am.open(DEFAULT_LAND_IMAGE);
-				break;
-			default:
-				is = am.open(DEFAULT_PORT_IMAGE);
-			}
+			is = am.open(DEFAULT_IMAGE_SET[ordinal % DEFAULT_IMAGE_SET.length]);
 		} catch (IOException ex) {
 			Toast.makeText(this.getActivity(),
 					R.string.error_opening_default_image, Toast.LENGTH_LONG)
@@ -152,11 +161,9 @@ public class DownloadFragment extends LLFragment {
 			return;
 		}
 		try {
-			synchronized (this.downloadPending) {
-				this.bitmap = null;
-				final Bitmap bitmap = BitmapFactory.decodeStream(is);
-				this.bitmapImage.setImageBitmap(bitmap);
-			}
+			this.bitmap = null;
+			final Bitmap bitmap = BitmapFactory.decodeStream(is);
+			this.bitmapImage.setImageBitmap(bitmap);
 		} finally {
 			try {
 				is.close();
@@ -167,33 +174,11 @@ public class DownloadFragment extends LLFragment {
 	}
 
 	/**
-	 * A new bitmap image has been generated. Update the bitmap and the
-	 * ImageView.
+	 * Load the bitmap from the content provider.
 	 * 
-	 * @param result
+	 * @param tupleId
+	 * @throws IOException
 	 */
-	private void setBitmap(Bitmap result) {
-		try {
-			synchronized (this.downloadPending) {
-				this.downloadPending.set(false);
-				this.bitmap = result;
-			}
-		} catch (IllegalArgumentException ex) {
-			logger.error("can not set bitmap image");
-		}
-	}
-
-	@Override
-	public void setArguments(Bundle bundle) {
-		try {
-			this.loadBitmap(bundle.getInt(ImageTable.ID.title));
-		} catch (FileNotFoundException ex) {
-			logger.error("could not load file {}", bundle, ex);
-		} catch (IOException ex) {
-			logger.error("could not close file {}", bundle, ex);
-		}
-	}
-
 	public void loadBitmap(int tupleId) throws IOException {
 		logger.debug("tuple id=<{}>", tupleId);
 		InputStream fileStream = null;
@@ -209,7 +194,7 @@ public class DownloadFragment extends LLFragment {
 			}
 			logger.trace("bitmap meta-data {}x{}", bitmap.getHeight(),
 					bitmap.getWidth());
-			this.setBitmap(bitmap);
+			this.bitmap = bitmap;
 		} finally {
 			if (fileStream != null)
 				fileStream.close();

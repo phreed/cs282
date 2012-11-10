@@ -8,6 +8,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -20,13 +21,13 @@ public class DownloadContentProvider extends LLContentProvider {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.provider.download");
 
-	private DownloadDatabase db = null;
+	private DownloadDatabaseHelper db = null;
 	private File imageDirectory = null;
 
 	@Override
 	public boolean onCreate() {
 		super.onCreate();
-		this.db = DownloadDatabase.newInstance(this.getContext());
+		this.db = DownloadDatabaseHelper.newInstance(this.getContext());
 
 		this.imageDirectory = this.getContext().getCacheDir();
 		return true;
@@ -50,20 +51,20 @@ public class DownloadContentProvider extends LLContentProvider {
 
 	/**
 	 * The downloaded image file is large and may not fit in the cursor values.
-	 * Therefore the image is placed into a temporary file (see openFile) rather than in the database.
+	 * Therefore the image is placed into a temporary file (see openFile) rather
+	 * than in the database.
 	 */
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
-		super.insert(uri, values);
-
+		logger.debug("insert into=<{}> values=<{}>", uri, values);
+		
 		final SQLiteDatabase db = this.db.getWritableDatabase();
 		int token = DownloadContentProviderSchema.URI_MATCHER.match(uri);
 		switch (token) {
 		case ImageTable.PATH_TOKEN: {
 			long id = db.insert(ImageTable.NAME, null, values);
 			this.getContext().getContentResolver().notifyChange(uri, null);
-			return ImageTable.CONTENT_URI.buildUpon()
-					.appendPath(String.valueOf(id)).build();
+			return ContentUris.withAppendedId(ImageTable.CONTENT_URI, id);
 		}
 		default: {
 			throw new UnsupportedOperationException("URI: " + uri
@@ -80,7 +81,6 @@ public class DownloadContentProvider extends LLContentProvider {
 	 */
 	@Override
 	public ParcelFileDescriptor openFile(Uri uri, String mode) {
-		super.openFile(uri, mode);
 		int imode = 0;
 		try {
 			if (mode.contains("w")) {
@@ -101,7 +101,7 @@ public class DownloadContentProvider extends LLContentProvider {
 			final List<String> segments = uri.getPathSegments();
 			final File imageFile = new File(this.imageDirectory,
 					segments.get(1));
-			logger.info("image file mode={} path={}, uri={}",
+			logger.info("image file mode=<{}> path=<{}>, uri=<{}>",
 					Integer.toHexString(imode), imageFile, uri);
 			try {
 				if (!imageFile.exists()) {
@@ -128,8 +128,8 @@ public class DownloadContentProvider extends LLContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
-		super.query(uri, projection, selection, selectionArgs, sortOrder);
-
+		logger.debug("reading from=<{}> where=<{}> args=<{}> columns=<{}>", uri, selection,
+				selectionArgs, projection);
 		final SQLiteDatabase db = this.db.getReadableDatabase();
 		final int match = DownloadContentProviderSchema.URI_MATCHER.match(uri);
 		switch (match) {
@@ -139,8 +139,8 @@ public class DownloadContentProvider extends LLContentProvider {
 			 */
 			final SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
 			builder.setTables(ImageTable.NAME);
-			return builder.query(db, null, null, null, null, null,
-					ImageTable.ID.title + " DESC");
+			return builder.query(db, projection, selection, selectionArgs, null, null,
+					sortOrder);
 		}
 		default:
 			return null;
@@ -150,11 +150,23 @@ public class DownloadContentProvider extends LLContentProvider {
 	@Override
 	public int update(Uri uri, ContentValues values, String selection,
 			String[] selectionArgs) {
+		logger.debug("updating from=<{}> where=<{}> args=<{}> values=<{}>", uri, selection,
+				selectionArgs, values);
 		return super.update(uri, values, selection, selectionArgs);
 	}
 
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
-		return super.delete(uri, selection, selectionArgs);
+		logger.debug("deleting from=<{}> where=<{}> args=<{}>", uri, selection,
+				selectionArgs);
+		final SQLiteDatabase db = this.db.getWritableDatabase();
+		final int match = DownloadContentProviderSchema.URI_MATCHER.match(uri);
+		switch (match) {
+		case ImageTable.PATH_TOKEN:
+			logger.trace("table=<{}>", ImageTable.NAME);
+			return db.delete(ImageTable.NAME, selection, selectionArgs);
+		default:
+			return super.delete(uri, selection, selectionArgs);
+		}
 	}
 }
