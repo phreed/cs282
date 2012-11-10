@@ -9,26 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.app.Activity;
-import android.content.AsyncQueryHandler;
-import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
-
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,8 +48,7 @@ import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.Im
  * @author "Fred Eisele" <phreed@gmail.com>
  * 
  */
-public class DownloadFragment extends LLFragment implements
-		LoaderManager.LoaderCallbacks<Cursor> {
+public class DownloadFragment extends LLFragment {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.fragment.download");
 
@@ -73,65 +61,8 @@ public class DownloadFragment extends LLFragment implements
 
 	public static Handler msgHandler = null;
 	public AtomicBoolean downloadPending = new AtomicBoolean(false);
-	private static final int IMAGE_LOADER_ID = 0x01;
 
 	private Context context = null;
-
-	/**
-	 * In order for a fragment to be useful it must have a containing activity.
-	 * In many cases it is important for the fragment to communicate with that
-	 * activity. A common case is when the fragment generates an event in which
-	 * the other components of the UI may be interested. That is the case here,
-	 * when the fragment detects a failure related to the uri it received the
-	 * uri edit field should be marked in such a way that the operator is
-	 * notified. It would be presumptuous for the fragment to post the error
-	 * itself so it calls a method implemented by the controlling activity. In
-	 * keeping with the fragment being a UI component it relies on the
-	 * <p>
-	 * 
-	 * @see http://developer.android.com/guide/components/fragments.html#
-	 *      CommunicatingWithActivity
-	 */
-	public interface OnDownloadHandler {
-		public void onFault(CharSequence msg);
-
-		public void onComplete();
-	}
-
-	private OnDownloadHandler eventHandler = null;
-
-	/**
-	 * An extension to the basic connection which holds information about the
-	 * state of the connection and the service binding.
-	 * <p>
-	 * This cannot be implemented as a generic as there is no interface defining
-	 * the asInterface() method on the stub. (or at least I don't know how)
-	 */
-	static abstract public class DownloadServiceConnection<T> implements
-			ServiceConnection {
-		protected T service;
-		protected boolean isBound;
-
-		public void onServiceConnected(ComponentName className, IBinder iservice) {
-			logger.debug("call service connected");
-			this.isBound = true;
-		}
-
-		public void onServiceDisconnected(ComponentName name) {
-			this.isBound = false;
-		}
-	};
-
-	/**
-	 * provide implementation for the DownloadCall class.
-	 */
-	static private DownloadServiceConnection<DownloadRequest> asyncConnection = new DownloadServiceConnection<DownloadRequest>() {
-		@Override
-		public void onServiceConnected(ComponentName className, IBinder iservice) {
-			super.onServiceConnected(className, iservice);
-			this.service = DownloadRequest.Stub.asInterface(iservice);
-		}
-	};
 
 	/**
 	 * This ensures that the controlling activity implements the callback
@@ -157,29 +88,11 @@ public class DownloadFragment extends LLFragment implements
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 		this.context = activity.getApplicationContext();
-
-		/** for reporting back to the controlling activity */
-		try {
-			this.eventHandler = (OnDownloadHandler) activity;
-		} catch (ClassCastException e) {
-			throw new ClassCastException(activity.toString()
-					+ " must implement " + OnDownloadHandler.class.getName());
-		}
-
-		this.explicitlyBindService(DownloadFragment.asyncConnection,
-				DownloadService.class);
 	}
 
-	/**
-	 * Generic helper method for binding to a service.
-	 * 
-	 * @param <T>
-	 */
-	private void explicitlyBindService(ServiceConnection conn,
-			Class<? extends DownloadService> clazz) {
-		logger.debug("bining to service explicitly {} {}", conn, clazz);
-		final Intent intent = new Intent(this.context, clazz);
-		this.context.bindService(intent, conn, Context.BIND_AUTO_CREATE);
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
 	}
 
 	/**
@@ -188,10 +101,6 @@ public class DownloadFragment extends LLFragment implements
 	@Override
 	public void onDetach() {
 		super.onDetach();
-		this.eventHandler = null;
-
-		if (DownloadFragment.asyncConnection.isBound)
-			this.context.unbindService(DownloadFragment.asyncConnection);
 	}
 
 	/**
@@ -215,7 +124,6 @@ public class DownloadFragment extends LLFragment implements
 				this.bitmapImage.setImageBitmap(this.bitmap);
 			}
 		}
-		this.getLoaderManager().initLoader(IMAGE_LOADER_ID, null, this);
 		return result;
 	}
 
@@ -269,165 +177,43 @@ public class DownloadFragment extends LLFragment implements
 			synchronized (this.downloadPending) {
 				this.downloadPending.set(false);
 				this.bitmap = result;
-				if (this.bitmap != null) {
-					this.getActivity().runOnUiThread(new Runnable() {
-						final DownloadFragment master = DownloadFragment.this;
-
-						public void run() {
-							master.bitmapImage.setImageBitmap(master.bitmap);
-						}
-					});
-				}
 			}
 		} catch (IllegalArgumentException ex) {
 			logger.error("can not set bitmap image");
 		}
 	}
 
-	/**
-	 * Load the appropriate bitmap into the image view. Notice that the file is
-	 * deleted after it is loaded. This is not an optimal solution but I could
-	 * not get the ParcelFileDescriptor to operate as I wanted.
-	 * 
-	 * @param bitmapFilePath
-	 */
-	public void loadBitmap(Cursor cursor) {
-		if (cursor == null) {
-			logger.error("null cursor");
-			return;
-		}
-		InputStream fileStream = null;
-		for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-			try {
-				final int tupleId = cursor.getInt(cursor
-						.getColumnIndex(ImageTable.ID.title));
-				final Uri tupleUri = ContentUris.withAppendedId(
-						ImageTable.CONTENT_URI, tupleId);
-				fileStream = this.context.getContentResolver().openInputStream(
-						tupleUri);
-				final Bitmap bitmap = BitmapFactory.decodeStream(fileStream);
-				if (bitmap == null) {
-					logger.error("null bitmap returned {}", tupleUri);
-					return;
-				}
-				logger.trace("bitmap meta-data {}x{}", bitmap.getHeight(),
-						bitmap.getWidth());
-				this.setBitmap(bitmap);
-
-				return; // just do one for now
-			} catch (FileNotFoundException ex) {
-				logger.error("could not load file {}", cursor, ex);
-			} finally {
-				if (fileStream != null)
-					try {
-						fileStream.close();
-					} catch (IOException ex) {
-						logger.error("could not close file {}", cursor, ex);
-					}
-			}
-		}
-		cursor.close();
-	}
-
-	/**
-	 * Report problems with downloading the image back to the parent activity.
-	 * 
-	 * @param errorMsg
-	 */
-	private void reportDownloadFault(CharSequence errorMsg) {
-		if (this.eventHandler == null)
-			return;
-		this.eventHandler.onFault(errorMsg);
-	}
-
-	private void reportDownloadComplete() {
-		if (this.eventHandler == null)
-			return;
-		this.eventHandler.onComplete();
-	}
-
-	/**
-	 * Asynchronous AIDL model ("Run Async AIDL").
-	 * <p>
-	 * In this model the DownloadActivity binds to a DownloadService process and
-	 * uses an asynchronous one-way AIDL method invocation to request that this
-	 * service:
-	 * <ol>
-	 * <li>download a designated bitmap file,</li>
-	 * <li>store it in the Android file system, and</li>
-	 * <li>use another one-way AIDL interface passed as a parameter to the
-	 * original one-way AIDL method invocation to return the filename back to
-	 * DownloadActivity as a callback, which opens the file and causes the
-	 * bitmap to be displayed on the screen.
-	 * </ol>
-	 * 
-	 * @param view
-	 */
-	public void downloadAsyncAidl(Uri uri) {
-		if (!DownloadFragment.asyncConnection.isBound) {
-			logger.warn("async service not bound");
-			return;
-		}
-		logger.debug("download async aidl");
+	@Override
+	public void setArguments(Bundle bundle) {
 		try {
-			DownloadFragment.asyncConnection.service.downloadImage(uri,
-					callback);
-		} catch (RemoteException ex) {
-			logger.error("download async aidl", ex);
-		}
-
-	}
-
-	private final DownloadCallback.Stub callback = new DownloadCallback.Stub() {
-		private DownloadFragment master = DownloadFragment.this;
-
-		public void sendPath(String imageFilePath) throws RemoteException {
-			master.reportDownloadComplete();
-		}
-
-		public void sendFault(String msg) throws RemoteException {
-			master.reportDownloadFault(msg);
-		}
-
-	};
-
-	/**
-	 * User cursor loader to get the latest image from the content provider.
-	 */
-	
-	@Override
-	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-		final CursorLoader cursorLoader = new CursorLoader(this.context,
-				ImageTable.CONTENT_URI, null, null, null, null);
-		return cursorLoader;
-	}
-
-	@Override
-	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-		switch (loader.getId()) {
-		case IMAGE_LOADER_ID:
-			this.loadBitmap(cursor);
+			this.loadBitmap(bundle.getInt(ImageTable.ID.title));
+		} catch (FileNotFoundException ex) {
+			logger.error("could not load file {}", bundle, ex);
+		} catch (IOException ex) {
+			logger.error("could not close file {}", bundle, ex);
 		}
 	}
 
-	@Override
-	public void onLoaderReset(Loader<Cursor> loader) {
-		// swap the cursor
-	}
-	
-	/**
-	 * 
-	 */
-	public void performQueryViaHandler() {
-		final AsyncQueryHandler handler = new AsyncQueryHandler(this.context.getContentResolver()) {
-			final DownloadFragment master = DownloadFragment.this;
-			
-			@Override
-			protected void onQueryComplete (int token, Object cookie, Cursor cursor) {
-				master.loadBitmap(cursor);
+	public void loadBitmap(int tupleId) throws IOException {
+		logger.debug("tuple id=<{}>", tupleId);
+		InputStream fileStream = null;
+		try {
+			final Uri tupleUri = ContentUris.withAppendedId(
+					ImageTable.CONTENT_URI, tupleId);
+			fileStream = this.context.getContentResolver().openInputStream(
+					tupleUri);
+			final Bitmap bitmap = BitmapFactory.decodeStream(fileStream);
+			if (bitmap == null) {
+				logger.error("null bitmap returned {}", tupleUri);
+				return;
 			}
-		};
-		handler.startQuery(1, null, ImageTable.CONTENT_URI, null, null, null, null);
+			logger.trace("bitmap meta-data {}x{}", bitmap.getHeight(),
+					bitmap.getWidth());
+			this.setBitmap(bitmap);
+		} finally {
+			if (fileStream != null)
+				fileStream.close();
+		}
 	}
 
 }

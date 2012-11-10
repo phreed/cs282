@@ -8,48 +8,17 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import android.content.ComponentName;
 import android.content.ContentValues;
-import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadService.LocalBinder;
 
 public class DownloadContentProvider extends LLContentProvider {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.provider.download");
-
-	private DownloadService service;
-	private boolean isBound = false;
-
-	/**
-	 * If the content provider wishes to communicate with the service directly
-	 * it can use the local service connection.
-	 * <p>
-	 * I am not sure which will perform better.
-	 */
-	private ServiceConnection serviceConn = new ServiceConnection() {
-		final private DownloadContentProvider master = DownloadContentProvider.this;
-
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			try {
-				final LocalBinder binder = (LocalBinder) service;
-				master.service = binder.getService();
-				master.isBound = true;
-			} catch (ClassCastException ex) {
-				// Pass
-			}
-		}
-
-		public void onServiceDisconnected(ComponentName name) {
-			master.isBound = false;
-		}
-	};
 
 	private DownloadDatabase db = null;
 	private File imageDirectory = null;
@@ -57,11 +26,6 @@ public class DownloadContentProvider extends LLContentProvider {
 	@Override
 	public boolean onCreate() {
 		super.onCreate();
-		/*
-		 * final Intent serviceIntent = new Intent(this.getContext(),
-		 * DownloadService.class); this.getContext().bindService(serviceIntent,
-		 * this.serviceConn, Context.BIND_AUTO_CREATE);
-		 */
 		this.db = DownloadDatabase.newInstance(this.getContext());
 
 		this.imageDirectory = this.getContext().getCacheDir();

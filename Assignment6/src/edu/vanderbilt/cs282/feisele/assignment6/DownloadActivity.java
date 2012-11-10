@@ -7,21 +7,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.app.ProgressDialog;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadFragment.OnDownloadHandler;
 
 /**
  * 
@@ -84,14 +92,53 @@ import edu.vanderbilt.cs282.feisele.assignment6.DownloadFragment.OnDownloadHandl
  * @author "Fred Eisele" <phreed@gmail.com>
  * 
  */
-public class DownloadActivity extends LLActivity implements OnDownloadHandler {
+public class DownloadActivity extends LLActivity implements
+		LoaderManager.LoaderCallbacks<Cursor> {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.activity.download");
 
-	private EditText urlEditText = null;
+	static final int NUM_ITEMS = 10;
 
-	private DownloadFragment imageFragment = null;
+	private static final int IMAGE_LOADER_ID = 0x01;
+
+	private CursorPagerAdapter<DownloadFragment> adapter;
+	private ViewPager pager;
+
+	private EditText urlEditText = null;
 	private ProgressDialog progress;
+
+	/**
+	 * An extension to the basic connection which holds information about the
+	 * state of the connection and the service binding.
+	 * <p>
+	 * This cannot be implemented as a generic as there is no interface defining
+	 * the asInterface() method on the stub. (or at least I don't know how)
+	 */
+	static abstract public class DownloadServiceConnection<T> implements
+			ServiceConnection {
+		protected T service;
+		protected boolean isBound;
+
+		public void onServiceConnected(ComponentName className, IBinder iservice) {
+			logger.debug("call service connected");
+			this.isBound = true;
+		}
+
+		public void onServiceDisconnected(ComponentName name) {
+			this.isBound = false;
+		}
+	};
+
+	/**
+	 * provide implementation for the DownloadCall class.
+	 */
+	static private DownloadServiceConnection<DownloadRequest> asyncConnection = new DownloadServiceConnection<DownloadRequest>() {
+		@Override
+		public void onServiceConnected(ComponentName className, IBinder iservice) {
+			super.onServiceConnected(className, iservice);
+			this.service = DownloadRequest.Stub.asInterface(iservice);
+		}
+	};
 
 	/**
 	 * The fragment is used to preserve state across various changes.
@@ -115,19 +162,18 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_download);
 
+		this.adapter = new CursorPagerAdapter<DownloadFragment>(
+				getSupportFragmentManager(), DownloadFragment.class, null);
+		this.pager = (ViewPager) findViewById(R.id.image_pager);
+		this.pager.setAdapter(adapter);
+
 		this.urlEditText = (EditText) findViewById(R.id.edit_image_url);
 
-		final FragmentManager fm = this.getSupportFragmentManager();
-		final Fragment fobj = fm.findFragmentById(R.id.fragment_container);
-		if (fobj == null) {
-			final FragmentTransaction txn = fm.beginTransaction();
-			this.imageFragment = new DownloadFragment();
-			txn.add(R.id.fragment_container, this.imageFragment);
-			txn.commit();
-		} else {
-			this.imageFragment = (DownloadFragment) fobj;
-		}
+		this.explicitlyBindService(DownloadActivity.asyncConnection,
+				DownloadService.class);
 
+		this.getSupportLoaderManager().initLoader(IMAGE_LOADER_ID,
+				savedInstanceState, this);
 	}
 
 	final static String PROGRESS_RUNNING_STATE_KEY = "progress_running_state_key";
@@ -144,17 +190,10 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 				.getBoolean(PROGRESS_RUNNING_STATE_KEY);
 		if (wasProgressRunning)
 			logger.trace("progress was running ");
-		final boolean isDownloadStillPending = this.imageFragment.downloadPending
-				.get();
-		if (wasProgressRunning & isDownloadStillPending)
-			this.startProgress("progress still pending");
 	}
 
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {
-		final boolean progressIsRunning = this.isProgressRunning();
-		this.imageFragment.downloadPending.set(progressIsRunning);
-
 		savedInstanceState.putBoolean(PROGRESS_RUNNING_STATE_KEY,
 				this.isProgressRunning());
 		super.onSaveInstanceState(savedInstanceState);
@@ -168,6 +207,139 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	public void onStop() {
 		super.onStop();
 		this.stopProgress();
+
+		if (DownloadActivity.asyncConnection.isBound)
+			this.unbindService(DownloadActivity.asyncConnection);
+	}
+
+	/**
+	 * Generic helper method for binding to a service.
+	 * 
+	 * @param <T>
+	 */
+	private void explicitlyBindService(ServiceConnection conn,
+			Class<? extends DownloadService> clazz) {
+		logger.debug("bining to service explicitly {} {}", conn, clazz);
+		final Intent intent = new Intent(this, clazz);
+		this.bindService(intent, conn, Context.BIND_AUTO_CREATE);
+	}
+
+	/**
+	 * User cursor loader to get the latest image from the content provider.
+	 */
+
+	@Override
+	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+		final CursorLoader cursorLoader = new CursorLoader(this,
+				ImageTable.CONTENT_URI, null, null, null, null);
+		return cursorLoader;
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+		switch (loader.getId()) {
+		case IMAGE_LOADER_ID:
+			this.adapter.swapCursor(cursor);
+		}
+	}
+
+	@Override
+	public void onLoaderReset(Loader<Cursor> loader) {
+		switch (loader.getId()) {
+		case IMAGE_LOADER_ID:
+			this.adapter.swapCursor(null);
+		}
+	}
+
+	/**
+	 * (@see
+	 * http://tumble.mlcastle.net/post/25875136857/bridging-cursorloaders-and
+	 * -viewpagers-on-android)
+	 * 
+	 * @param <F>
+	 */
+	public class CursorPagerAdapter<F extends Fragment> extends
+			FragmentStatePagerAdapter {
+		private final Class<F> fragmentClass;
+		private Cursor cursor;
+
+		/**
+		 * Provide the FragmentManager and initial Cursor (which is usually
+		 * null), the constructor also takes the Class object for the type of
+		 * Fragment you wish to create, and the projection you passed to your
+		 * CursorLoader. The projection will be used to automatically fill in
+		 * your Fragment’s arguments with the data from the Cursor.
+		 * 
+		 * @param fm
+		 * @param fragmentClass
+		 * @param cursor
+		 */
+		public CursorPagerAdapter(FragmentManager fm, Class<F> fragmentClass,
+				Cursor cursor) {
+			super(fm);
+			this.fragmentClass = fragmentClass;
+			this.cursor = cursor;
+		}
+
+		/**
+		 * The cursor can return values of various types. These should be cast
+		 * into a similar form for the arguments.
+		 */
+		@Override
+		public F getItem(int position) {
+			if (cursor == null) 
+				return null;
+
+			cursor.moveToPosition(position);
+			final F frag;
+			try {
+				frag = fragmentClass.newInstance();
+			} catch (Exception ex) {
+				throw new RuntimeException(ex);
+			}
+			frag.onAttach(DownloadActivity.this);
+			final Bundle args = new Bundle();
+			final String[] projection = cursor.getColumnNames();
+			for (int ix = 0; ix < projection.length; ++ix) {
+				switch (cursor.getType(ix)) {
+				case Cursor.FIELD_TYPE_NULL:
+					break;
+				case Cursor.FIELD_TYPE_FLOAT:
+					args.putFloat(projection[ix], cursor.getFloat(ix));
+					break;
+				case Cursor.FIELD_TYPE_BLOB:
+					break;
+				case Cursor.FIELD_TYPE_INTEGER:
+					args.putInt(projection[ix], cursor.getInt(ix));
+					break;
+				case Cursor.FIELD_TYPE_STRING:
+					args.putString(projection[ix], cursor.getString(ix));
+					break;
+				}
+			}
+			frag.setArguments(args);
+			return frag;
+		}
+
+		@Override
+		public int getCount() {
+			if (cursor == null)
+				return 0;
+			else
+				return cursor.getCount();
+		}
+
+		public void swapCursor(Cursor cursor) {
+			if (this.cursor == cursor)
+				return;
+
+			this.cursor = cursor;
+			this.notifyDataSetChanged();
+		}
+
+		public Cursor getCursor() {
+			return cursor;
+		}
 	}
 
 	/**
@@ -176,8 +348,6 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	 */
 	private void startProgress(CharSequence msg) {
 		logger.debug("startProgress");
-		this.imageFragment.downloadPending.set(true);
-
 		this.progress = new ProgressDialog(this);
 		this.progress.setTitle(R.string.dialog_progress_title);
 		this.progress.setMessage(msg);
@@ -193,7 +363,6 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	 */
 	private void stopProgress() {
 		logger.debug("stopProgress");
-		this.imageFragment.downloadPending.set(false);
 		if (this.isProgressRunning())
 			this.progress.dismiss();
 	}
@@ -308,7 +477,6 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	 */
 	public void resetImage(View view) {
 		logger.debug("resetImage");
-		this.imageFragment.resetImage(view);
 	}
 
 	/**
@@ -331,10 +499,46 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 		final Uri uri = this.getValidUrlFromWidget();
 		if (uri == null)
 			return;
-		this.imageFragment.downloadAsyncAidl(uri);
 
+		if (!DownloadActivity.asyncConnection.isBound) {
+			logger.warn("async service not bound");
+			return;
+		}
+		logger.debug("download async aidl");
+		try {
+			DownloadActivity.asyncConnection.service.downloadImage(uri,
+					callback);
+		} catch (RemoteException ex) {
+			logger.error("download async aidl", ex);
+		}
 		this.startProgress(this.getResources().getText(
 				R.string.message_progress_async));
+	}
+
+	private final DownloadCallback.Stub callback = new DownloadCallback.Stub() {
+		private DownloadActivity master = DownloadActivity.this;
+
+		public void sendPath(String imageFilePath) throws RemoteException {
+			master.reportDownloadComplete();
+		}
+
+		public void sendFault(String msg) throws RemoteException {
+			master.reportDownloadFault(msg);
+		}
+
+	};
+
+	/**
+	 * Report problems with downloading the image back to the parent activity.
+	 * 
+	 * @param errorMsg
+	 */
+	private void reportDownloadFault(CharSequence errorMsg) {
+		this.onFault(errorMsg);
+	}
+
+	private void reportDownloadComplete() {
+		this.onComplete();
 	}
 
 	/**
@@ -356,7 +560,6 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 				for (DownloadActivity master : params) {
 					final Cursor cursor = master.getContentResolver().query(
 							ImageTable.CONTENT_URI, null, null, null, null);
-					master.imageFragment.loadBitmap(cursor);
 				}
 				return null;
 			}
@@ -377,8 +580,6 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 	 */
 	public void runQueryViaLoader(View view) {
 		logger.debug("run query via content loader");
-		final Loader<Cursor> loader = this.imageFragment.onCreateLoader(1, null);
-		loader.startLoading();
 	}
 
 	/**
@@ -395,7 +596,6 @@ public class DownloadActivity extends LLActivity implements OnDownloadHandler {
 		logger.debug("run query via async query handler");
 		final Cursor cursor = this.getContentResolver().query(
 				ImageTable.CONTENT_URI, null, null, null, null);
-		this.imageFragment.loadBitmap(cursor);
 	}
 
 }
