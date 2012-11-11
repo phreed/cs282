@@ -15,7 +15,7 @@ import android.support.v4.app.FragmentActivity;
  * @author "Fred Eisele" <phreed@gmail.com>
  */
 public abstract class LLActivity extends FragmentActivity {
-	static private final Logger logger = LoggerFactory.getLogger("class.logging.activity");
+	static private final Logger logger = LoggerFactory.getLogger("class.activity.lifecycle");
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

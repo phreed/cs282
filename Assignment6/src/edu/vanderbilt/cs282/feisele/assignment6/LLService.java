@@ -13,7 +13,7 @@ import android.content.Intent;
  * @author "Fred Eisele" <phreed@gmail.com>
  */
 public abstract class LLService extends Service {
-	static private final Logger logger = LoggerFactory.getLogger("class.logging.service");
+	static private final Logger logger = LoggerFactory.getLogger("class.service.lifecycle");
 
 	/**
 	 * Display a notification about us starting. We put an icon in the status

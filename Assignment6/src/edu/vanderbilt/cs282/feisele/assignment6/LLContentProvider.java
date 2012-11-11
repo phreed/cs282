@@ -16,7 +16,7 @@ import android.os.ParcelFileDescriptor;
  * @author "Fred Eisele" <phreed@gmail.com>
  */
 public abstract class LLContentProvider extends ContentProvider {
-	static private final Logger logger = LoggerFactory.getLogger("class.logging.provider");
+	static private final Logger logger = LoggerFactory.getLogger("class.provider.lifecycle");
 
 	/**
 	 * Display a notification about us starting. We put an icon in the status

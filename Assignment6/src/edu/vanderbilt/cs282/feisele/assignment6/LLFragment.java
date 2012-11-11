@@ -18,7 +18,7 @@ import android.view.ViewGroup;
  * @author "Fred Eisele" <phreed@gmail.com>
  */
 public abstract class LLFragment extends Fragment {
-	static private final Logger logger = LoggerFactory.getLogger("class.logging.fragment.list");
+	static private final Logger logger = LoggerFactory.getLogger("class.fragment.lifecycle");
 
 	@Override
 	public void onAttach(Activity activity) {

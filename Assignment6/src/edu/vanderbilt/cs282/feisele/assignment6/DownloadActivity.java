@@ -109,10 +109,13 @@ public class DownloadActivity extends LLActivity {
 	private ProgressDialog progress;
 
 	private Uri activeUri = null;
+
 	public String getActiveUri() {
-		if (this.activeUri == null) return "";
+		if (this.activeUri == null)
+			return "";
 		return this.activeUri.toString();
 	}
+
 	private LoaderManager.LoaderCallbacks<Cursor> imageCursorLoader = null;
 
 	/**
@@ -176,17 +179,25 @@ public class DownloadActivity extends LLActivity {
 		this.pager.setAdapter(adapter);
 
 		this.urlEditText = (EditText) findViewById(R.id.edit_image_url);
-
+		
 		this.explicitlyBindService(DownloadActivity.asyncConnection,
 				DownloadService.class);
 
 		this.imageCursorLoader = new MyCursorLoader(this);
 
-		this.getSupportLoaderManager().initLoader(IMAGE_LOADER_ID,
-				savedInstanceState, this.imageCursorLoader);
+		if (savedInstanceState != null) {
+			this.activeUri = Uri.parse(savedInstanceState
+					.getString(ACTIVE_URL_KEY));
+		}
+		final Bundle bundle = new Bundle();
+		bundle.putString(ACTIVE_URL_KEY, this.getActiveUri());
+
+		final LoaderManager lm = this.getSupportLoaderManager();
+		lm.initLoader(IMAGE_LOADER_ID, bundle, this.imageCursorLoader);
 	}
 
 	final static String PROGRESS_RUNNING_STATE_KEY = "progress_running_state_key";
+	final static String ACTIVE_URL_KEY = "active_url_key";
 
 	/**
 	 * If the download is ongoing then the progress indicator will need to be
@@ -196,18 +207,20 @@ public class DownloadActivity extends LLActivity {
 	@Override
 	public void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
-		this.activeUri = Uri.parse(savedInstanceState.getString("activeUri"));
+
 		final boolean wasProgressRunning = savedInstanceState
 				.getBoolean(PROGRESS_RUNNING_STATE_KEY);
 		if (wasProgressRunning)
 			logger.trace("progress was running ");
+
 	}
 
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {
 		savedInstanceState.putBoolean(PROGRESS_RUNNING_STATE_KEY,
 				this.isProgressRunning());
-		savedInstanceState.putString("activeUri", this.getActiveUri());
+		savedInstanceState.putString(ACTIVE_URL_KEY, this.getActiveUri());
+
 		super.onSaveInstanceState(savedInstanceState);
 		logger.debug("onSaveInstanceState");
 	}
@@ -248,24 +261,28 @@ public class DownloadActivity extends LLActivity {
 		}
 
 		@Override
-		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+		public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
+			logger.debug("loader on create : {} {}", id, bundle);
+			final String activeUrl = bundle.getString(ACTIVE_URL_KEY);
 			final CursorLoader cursorLoader = new CursorLoader(this.master,
 					ImageTable.CONTENT_URI, null, Selection.BY_URI.code,
-					new String[] { this.master.getActiveUri() },
-					Order.BY_ID.ascending());
+					new String[] { activeUrl }, Order.BY_ID.ascending());
 			return cursorLoader;
 		}
 
 		@Override
 		public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+			logger.debug("loader finished: {}", loader.getId());
 			switch (loader.getId()) {
 			case IMAGE_LOADER_ID:
+				logger.debug("loaded image");
 				this.master.adapter.swapCursor(cursor);
 			}
 		}
 
 		@Override
 		public void onLoaderReset(Loader<Cursor> loader) {
+			logger.debug("loader reset");
 			switch (loader.getId()) {
 			case IMAGE_LOADER_ID:
 				this.master.adapter.swapCursor(null);
@@ -309,13 +326,13 @@ public class DownloadActivity extends LLActivity {
 		 */
 		@Override
 		public F getItem(int position) {
-			if (cursor == null)
+			if (cursor == null) {
 				return null;
-
+			}
 			cursor.moveToPosition(position);
 			final F frag;
 			try {
-				frag = fragmentClass.newInstance();
+				frag = this.fragmentClass.newInstance();
 			} catch (Exception ex) {
 				throw new RuntimeException(ex);
 			}
@@ -345,16 +362,16 @@ public class DownloadActivity extends LLActivity {
 
 		@Override
 		public int getCount() {
-			if (cursor == null)
+			if (cursor == null) {
 				return 0;
-			else
-				return cursor.getCount();
+			}
+			return cursor.getCount();
 		}
 
 		public void swapCursor(Cursor cursor) {
-			if (this.cursor == cursor)
+			if (this.cursor == cursor) {
 				return;
-
+			}
 			this.cursor = cursor;
 			this.notifyDataSetChanged();
 		}
@@ -409,6 +426,7 @@ public class DownloadActivity extends LLActivity {
 		logger.debug("onComplete");
 		this.runOnUiThread(new Runnable() {
 			final DownloadActivity master = DownloadActivity.this;
+
 			public void run() {
 				master.activeUri = Uri.parse(msg);
 				master.stopProgress();
@@ -594,6 +612,7 @@ public class DownloadActivity extends LLActivity {
 						logger.debug("query cursor size=<{}>",
 								cursor.getCount());
 						master.adapter.swapCursor(cursor);
+						master.adapter.notifyDataSetChanged();
 					}
 				});
 			}
@@ -614,6 +633,12 @@ public class DownloadActivity extends LLActivity {
 	 */
 	public void runQueryViaLoader(View view) {
 		logger.debug("run query via content loader");
+
+		final Bundle bundle = new Bundle();
+		bundle.putString(ACTIVE_URL_KEY, this.getActiveUri());
+
+		final LoaderManager lm = this.getSupportLoaderManager();
+		lm.restartLoader(IMAGE_LOADER_ID, bundle, this.imageCursorLoader);
 	}
 
 	/**
@@ -643,8 +668,7 @@ public class DownloadActivity extends LLActivity {
 			}
 		};
 		handler.startQuery(1, this, ImageTable.CONTENT_URI, null,
-				Selection.BY_URI.code,
-				new String[] { this.getActiveUri() },
+				Selection.BY_URI.code, new String[] { this.getActiveUri() },
 				Order.BY_ID.ascending());
 	}
 
