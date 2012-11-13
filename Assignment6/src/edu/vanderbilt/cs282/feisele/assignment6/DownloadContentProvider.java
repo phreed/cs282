@@ -17,6 +17,16 @@ import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
 
+/**
+ * This content provider holds the images downloaded by the download service. It
+ * does not store its images in the database itself, rather it stores meta-data
+ * about the images in the database and the images are saved as files. These
+ * files are accessed via the openFile() method. This is to accommodate the size
+ * limitation on the cursor fields.
+ * 
+ * @author "Fred Eisele" <phreed@gmail.com>
+ * 
+ */
 public class DownloadContentProvider extends LLContentProvider {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.provider.download");
@@ -57,7 +67,7 @@ public class DownloadContentProvider extends LLContentProvider {
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
 		logger.debug("insert into=<{}> values=<{}>", uri, values);
-		
+
 		final SQLiteDatabase db = this.db.getWritableDatabase();
 		int token = DownloadContentProviderSchema.URI_MATCHER.match(uri);
 		switch (token) {
@@ -125,11 +135,14 @@ public class DownloadContentProvider extends LLContentProvider {
 		return null;
 	}
 
+	/**
+	 * Used to obtain the meta data about the images.
+	 */
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
-		logger.debug("reading from=<{}> where=<{}> args=<{}> columns=<{}>", uri, selection,
-				selectionArgs, projection);
+		logger.debug("reading from=<{}> where=<{}> args=<{}> columns=<{}>",
+				uri, selection, selectionArgs, projection);
 		final SQLiteDatabase db = this.db.getReadableDatabase();
 		final int match = DownloadContentProviderSchema.URI_MATCHER.match(uri);
 		switch (match) {
@@ -139,22 +152,29 @@ public class DownloadContentProvider extends LLContentProvider {
 			 */
 			final SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
 			builder.setTables(ImageTable.NAME);
-			return builder.query(db, projection, selection, selectionArgs, null, null,
-					sortOrder);
+			return builder.query(db, projection, selection, selectionArgs,
+					null, null, sortOrder);
 		}
 		default:
 			return null;
 		}
 	}
 
+	/**
+	 * Not implemented.
+	 */
 	@Override
 	public int update(Uri uri, ContentValues values, String selection,
 			String[] selectionArgs) {
-		logger.debug("updating from=<{}> where=<{}> args=<{}> values=<{}>", uri, selection,
-				selectionArgs, values);
-		return super.update(uri, values, selection, selectionArgs);
+		logger.debug("updating from=<{}> where=<{}> args=<{}> values=<{}>",
+				uri, selection, selectionArgs, values);
+		throw new UnsupportedOperationException("update uri: " + uri
+				+ " not supported.");
 	}
 
+	/**
+	 * Used to delete the meta-data. The images are left untouched.
+	 */
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
 		logger.debug("deleting from=<{}> where=<{}> args=<{}>", uri, selection,

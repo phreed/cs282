@@ -173,13 +173,13 @@ public class DownloadActivity extends LLActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_download);
 
+		this.pager = (ViewPager) findViewById(R.id.image_pager);
 		this.adapter = new CursorPagerAdapter<DownloadFragment>(
 				getSupportFragmentManager(), DownloadFragment.class, null);
-		this.pager = (ViewPager) findViewById(R.id.image_pager);
-		this.pager.setAdapter(adapter);
+		this.pager.setAdapter(this.adapter);
 
 		this.urlEditText = (EditText) findViewById(R.id.edit_image_url);
-		
+
 		this.explicitlyBindService(DownloadActivity.asyncConnection,
 				DownloadService.class);
 
@@ -313,8 +313,8 @@ public class DownloadActivity extends LLActivity {
 		 * @param fragmentClass
 		 * @param cursor
 		 */
-		public CursorPagerAdapter(FragmentManager fm, Class<F> fragmentClass,
-				Cursor cursor) {
+		public CursorPagerAdapter(final FragmentManager fm,
+				final Class<F> fragmentClass, Cursor cursor) {
 			super(fm);
 			this.fragmentClass = fragmentClass;
 			this.cursor = cursor;
@@ -360,6 +360,9 @@ public class DownloadActivity extends LLActivity {
 			return frag;
 		}
 
+		/**
+		 * Inform the pager how many items there are.
+		 */
 		@Override
 		public int getCount() {
 			if (cursor == null) {
@@ -368,17 +371,38 @@ public class DownloadActivity extends LLActivity {
 			return cursor.getCount();
 		}
 
+		/**
+		 * This is pure voodoo to get the reload effect.
+		 * <p>
+		 * getItemPosition() is called when the host view is attempting to
+		 * determine if an item's position has changed such as following
+		 * notifyDataSetChanged(). Returning POSITION_NONE indicates the object
+		 * is no longer present in the adapter. When notifyDataSetChanged() is
+		 * called, getItemPosition() is called for each object. Returning
+		 * POSITION_NONE indicates that the position of the object nowhere,
+		 * hence the view pager will remove each view and reload.
+		 */
+		@Override
+		public int getItemPosition(Object object) {
+			return POSITION_NONE;
+		}
+
+		/**
+		 * Used to indicate that the underlying data has changed. The
+		 * notifyDataSetChanged() causes the views displayed by the fragments to
+		 * refresh.
+		 * 
+		 * @param cursor
+		 */
 		public void swapCursor(Cursor cursor) {
 			if (this.cursor == cursor) {
 				return;
 			}
+			logger.debug("cursor swapped");
 			this.cursor = cursor;
 			this.notifyDataSetChanged();
 		}
 
-		public Cursor getCursor() {
-			return cursor;
-		}
 	}
 
 	/**

@@ -6,6 +6,11 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
 
+/**
+ * This object is used to manage the lifecycle of the download database.
+ * 
+ * @author "Fred Eisele" <phreed@gmail.com>
+ */
 public class DownloadDatabaseHelper extends SQLiteOpenHelper {
 	private static final String DATABASE_NAME = "downloaded.db";
 	private static final int DATABASE_VERSION = 3;

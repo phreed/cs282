@@ -10,7 +10,18 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 /**
- * The schema for the downloaded resources.
+ * The schema for the downloaded database.
+ * <p>
+ * This singleton provides constants for all the named items used by the database.
+ * <ul>
+ * <li>The content provider constants</li>
+ * <li>The uri matcher</li>
+ * <li>The table column names and their other properties</li>
+ * <li>The selection methods</li>
+ * <li>Ordering plans</li>
+ * </ul>
+ *  
+ * @author "Fred Eisele" <phreed@gmail.com>
  */
 public enum DownloadContentProviderSchema {
 	INSTANCE;
