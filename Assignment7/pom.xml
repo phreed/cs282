@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+  xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <parent>
+    <groupId>edu.vanderbilt.cs282.feisele</groupId>
+    <artifactId>parent</artifactId>
+    <version>7.0.0-SNAPSHOT</version>
+  </parent>
+
+  <modelVersion>4.0.0</modelVersion>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <android.target>android-8</android.target>
+  </properties>
+
+  <artifactId>assignment7</artifactId>
+  <packaging>apk</packaging>
+  <name>CS282 Application Final Project</name>
+
+  <build>
+    <plugins>
+
+      <!-- clean up the ndk artifacts -->
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>libs</directory>
+            </fileset>
+            <fileset>
+              <directory>obj</directory>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+        <artifactId>android-maven-plugin</artifactId>
+        <executions>
+          <!-- build the shared libraries -->
+          <execution>
+            <id>build-native-library</id>
+            <goals>
+              <goal>ndk-build</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <target>cs282core</target>
+              <ndkFinalLibraryName>cs282core</ndkFinalLibraryName>
+              <ndk>
+                <path>${env.ANDROID_NDK_HOME}</path>
+              </ndk>
+              <attachNativeArtifacts>true</attachNativeArtifacts>
+              <clearNativeArtifacts>true</clearNativeArtifacts>
+              <deleteConflictingFiles>true</deleteConflictingFiles>
+              <sign>
+                <debug>false</debug>
+              </sign>
+              <proguard>
+                <skip>true</skip>
+              </proguard>
+            </configuration>
+          </execution>
+          <!-- update the manifest with version information -->
+          <execution>
+            <id>manifest-version</id>
+            <goals>
+              <goal>manifest-update</goal>
+            </goals>
+            <configuration>
+              <manifest>
+                <versionCodeUpdateFromVersion>true</versionCodeUpdateFromVersion>
+              </manifest>
+            </configuration>
+          </execution>
+          <!-- build the android package -->
+          <execution>
+            <id>build-apk</id>
+            <goals>
+              <goal>apk</goal>
+            </goals>
+            <configuration>
+              <sdk>
+                <platform>8</platform>
+                <path>${env.ANDROID_SDK}</path>
+              </sdk>
+              <undeployBeforeDeploy>true</undeployBeforeDeploy>
+              <attachJar>true</attachJar>
+            </configuration>
+          </execution>
+        </executions>
+        <extensions>true</extensions>
+      </plugin>
+
+      <!-- compile the java -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.tony19</groupId>
+      <artifactId>logback-android-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.tony19</groupId>
+      <artifactId>logback-android-classic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.android</groupId>
+      <artifactId>android-test</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jgroups</groupId>
+      <artifactId>jgroups-android</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>edu.vu.isis</groupId>
+      <artifactId>cs282lib</artifactId>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>edu.vu.isis</groupId>
+      <artifactId>cs282-message</artifactId>
+      <classifier>protoc24</classifier>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>transapps</groupId>
+      <artifactId>tasettings-api</artifactId>
+    </dependency>
+  </dependencies>
+</project>

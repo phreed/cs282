@@ -1,0 +1,74 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/top"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/prompt_image_url"
+            style="@style/Prompt.Style"
+            android:text="@string/prompt_image_url" />
+
+        <EditText
+            android:id="@+id/edit_image_url"
+            style="@style/Url.EditText.Style"
+            android:hint="@string/default_image_url" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/inputs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/run_download"
+            style="@style/Button.Style"
+            android:onClick="runDownload"
+            android:text="@string/label_run_download" />
+
+        <Button
+            android:id="@+id/reset_image"
+            style="@style/Button.Style"
+            android:onClick="resetImage"
+            android:text="@string/label_reset_image" />
+        
+        <Button
+            android:id="@+id/run_query_via_query"
+            style="@style/Button.Style"
+            android:onClick="runQueryViaQuery"
+            android:text="@string/label_run_query_via_query" />
+        
+        <Button
+            android:id="@+id/run_query_via_loader"
+            style="@style/Button.Style"
+            android:onClick="runQueryViaLoader"
+            android:text="@string/label_run_query_via_loader" />
+        
+        <Button
+            android:id="@+id/run_query_via_handler"
+            style="@style/Button.Style"
+            android:onClick="runQueryViaHandler"
+            android:text="@string/label_run_query_via_handler" />
+        
+    </LinearLayout>
+
+     <android.support.v4.view.ViewPager
+            android:id="@+id/image_pager"
+            android:layout_width="match_parent"
+            android:layout_height="0px"
+            android:layout_weight="1">
+    </android.support.v4.view.ViewPager>
+    <!-- 
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+         -->
+
+</LinearLayout>

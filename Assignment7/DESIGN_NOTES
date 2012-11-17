@@ -1,0 +1,14 @@
+This example makes use of the logback logging framework.
+logback can be configured via the "assets/logback.xml" as
+part of the android package or via the "/mnt/sdcard/logback/logback-test.xml"
+file.
+
+The project makes use of the ViewPager and JSoup.
+JSoup is an html parser which is used to harvest 
+images from the specified page.
+
+ViewPager is used to display the set of images harvested.
+
+The project does not have a good way of selecting 
+a set of images.  
+
