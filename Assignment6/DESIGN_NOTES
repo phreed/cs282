@@ -3,16 +3,12 @@ logback can be configured via the "assets/logback.xml" as
 part of the android package or via the "/mnt/sdcard/logback/logback-test.xml"
 file.
 
-I am in the process of adding a test for the service and activity.
-There are some issues with the current solution.
-1) cursor loader is always active, the button does nothing important.
-   The cursor loader startes immediately.
-2) The content provider needs a notifyChange call for any observers.
-3) The provided url will be scanned for images and all of the
-   images will be stored in the content provider.
-4) Both the cursor and the file descriptor should be loaded asynchronously.
-5) An image gallery will be presented.
-6) One of the buttons will be used for showing the sets of urls 
-   from which one will be current.
+The project makes use of the ViewPager and JSoup.
+JSoup is an html parser which is used to harvest 
+images from the specified page.
 
+ViewPager is used to display the set of images harvested.
+
+The project does not have a good way of selecting 
+a set of images.  
 
