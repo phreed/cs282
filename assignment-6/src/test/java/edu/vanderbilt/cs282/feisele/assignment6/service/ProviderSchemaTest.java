@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.assignment6.provider;
+package edu.vanderbilt.cs282.feisele.assignment6.service;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 
@@ -23,15 +23,15 @@ import edu.vanderbilt.cs282.feisele.assignment6.service.DownloadService.FailedDo
 @RunWith(JUnit4.class)
 public class ProviderSchemaTest {
 	private static final Logger logger = LoggerFactory
-			.getLogger("test.genealogist");
+			.getLogger("test.FailedDownload");
 
 	/**
 	 * A test to make sure the behavior is nominally correct. A tree is built
 	 * for an object which belongs to the java language.
 	 */
 	@Test
-	public void verifySqlCreate() {
-		logger.info("verifySqlCreate");
+	public void checkFailedDownload() {
+		logger.info("checkFailedDownload");
 
 		final FailedDownload actual = new FailedDownload(null, "foo");
 
