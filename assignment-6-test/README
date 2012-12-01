@@ -25,7 +25,7 @@ Alternatively, you can "manually" install the APK onto the phone and run the tes
 
 $ adb install -r AmmoCoreTest-release.apk
 
-$ adb shell am instrument -w edu.vanderbilt.cs282.feisele.assignment7.tests edu.vanderbilt.cs282.feisele.assignment7.tests/android.test.InstrumentationTestRunner"
+$ adb shell am instrument -w edu.vanderbilt.cs282.feisele.assignment6.tests edu.vanderbilt.cs282.feisele.assignment6.tests/android.test.InstrumentationTestRunner"
 
 
 OUTPUT

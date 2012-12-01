@@ -36,14 +36,14 @@
   <dependencies>
     <dependency>
       <groupId>edu.vanderbilt.cs282.feisele</groupId>
-      <artifactId>assignment7</artifactId>
+      <artifactId>assignment6</artifactId>
       <scope>provided</scope>
       <version>${project.version}</version>
       <type>apk</type>
     </dependency>
     <dependency>
       <groupId>edu.vanderbilt.cs282.feisele</groupId>
-      <artifactId>assignment7</artifactId>
+      <artifactId>assignment6</artifactId>
       <scope>provided</scope>
       <version>${project.version}</version>
       <type>jar</type>
