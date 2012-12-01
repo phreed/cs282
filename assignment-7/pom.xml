@@ -15,7 +15,7 @@
     <android.target>android-8</android.target>
   </properties>
 
-  <artifactId>assignment7</artifactId>
+  <artifactId>assignment-7</artifactId>
   <packaging>apk</packaging>
   <name>cs282 application final project</name>
 

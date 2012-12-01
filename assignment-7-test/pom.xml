@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
   <parent>
     <groupId>edu.vanderbilt.cs282.feisele</groupId>
-    <artifactId>cs282-parent</artifactId>
+    <artifactId>parent</artifactId>
     <version>7.0.0-SNAPSHOT</version>
   </parent>
 
@@ -12,7 +13,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <artifactId>assignment7Test</artifactId>
+  <artifactId>assignment-7-test</artifactId>
   <packaging>apk</packaging>
   <name>Assignment 7 Test Project</name>
 
@@ -63,12 +64,6 @@
     <dependency>
       <groupId>com.google.android</groupId>
       <artifactId>android</artifactId>
-      <scope>provided</scope>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
       <scope>provided</scope>
       <type>jar</type>
     </dependency>
