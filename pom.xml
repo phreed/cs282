@@ -20,7 +20,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <name>cs282 common parent project</name>
 
   <modules>
-    <module>Assignment7</module>
+    <module>assignment-7</module>
+    <module>assignment-7-test</module>
   </modules>
 
   <scm>

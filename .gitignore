@@ -5,3 +5,4 @@ gen
 *.swp
 .svn/
 target/
+bin/

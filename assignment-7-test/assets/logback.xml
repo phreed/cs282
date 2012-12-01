@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+ 
+ <!--
+   By default encoders are assigned the type
+     ch.qos.logback.classic.encoder.PatternLayoutEncoder
+   see http://logback.qos.ch/manual/layouts.html
+ -->
+<configuration>
+
+  <property name="LOG_DIR" value="/mnt/sdcard" />
+
+  <appender name="TRIAL" class="ch.qos.logback.core.FileAppender">
+    <file>${LOG_DIR}/dist-trial.log</file>
+    <append>true</append>
+    <encoder>
+      <!--  output: elapsed time , logger name  and message -->
+      <pattern>%.-1level %10relative [%thread] %-20logger{35} - %msg%n</pattern>
+      <outputPatternAsHeader>true</outputPatternAsHeader>
+    </encoder>
+  </appender>
+
+  <root level="WARN">
+    <appender-ref ref="TRIAL" />
+  </root>
+
+</configuration>

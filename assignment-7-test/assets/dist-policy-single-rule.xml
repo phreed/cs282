@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<policy>
+
+    <topic type="" >
+
+        <description>
+This is specifically for testing the distributor.
+        </description>
+
+        <routing
+            category="postal"
+            lifespan="3"
+            priority="normal" >
+
+            <clause>
+                <literal
+                    condition="success"
+                    encoding="json"
+                    term="mock" />
+            </clause>
+        </routing>
+
+        <routing
+            category="subscribe"
+            lifespan="3"
+            priority="normal" >
+
+            <clause>
+                <literal
+                    condition="success"
+                    encoding="json"
+                    term="mock" />
+            </clause>
+        </routing>
+    </topic>
+
+</policy>

@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<configuration>
+
+  <property name="LOG_DIR" value="/mnt/sdcard" />
+
+  <appender name="LOGCAT" class="ch.qos.logback.classic.android.LogcatAppender">
+    <checkLoggable>false</checkLoggable>
+    <tagEncoder>
+       <pattern>%logger{22}</pattern>
+    </tagEncoder>
+    <encoder>
+       <pattern>[%method] %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="STATS" class="ch.qos.logback.core.FileAppender">
+    <file>${LOG_DIR}/dist-comp-test.log</file>
+    <append>true</append>
+    <encoder>
+      <!-- <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>   -->
+      <!--  output: elapsed time , logger name  and message -->
+      <pattern>%.-1level %10relative %-20logger{35} - %msg%n</pattern>
+      <outputPatternAsHeader>true</outputPatternAsHeader>
+    </encoder>
+  </appender>
+
+
+  <logger name="api" level="TRACE">
+       <appender-ref ref="STATS" />
+  </logger>
+   <logger name="dist.state" level="TRACE">
+       <appender-ref ref="STATS" />
+  </logger>
+   <logger name="dist.thread" level="TRACE">
+       <appender-ref ref="STATS" />
+  </logger>
+   <logger name="dist.store" level="TRACE">
+       <appender-ref ref="STATS" />
+  </logger>
+   <logger name="service" level="TRACE">
+       <appender-ref ref="STATS" />
+  </logger>
+  <logger name="net.mock" level="TRACE">
+       <appender-ref ref="STATS" />
+  </logger>
+   <logger name="link.mock" level="TRACE">
+       <appender-ref ref="STATS" />
+  </logger>
+   <logger name="test.context.mock" level="TRACE">
+       <appender-ref ref="STATS" />
+  </logger>
+   <logger name="dist.policy.class" level="TRACE">
+       <appender-ref ref="STATS" />
+  </logger>
+
+  <root level="OFF">
+    <appender-ref ref="LOGCAT" />
+  </root>
+
+</configuration>
