@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.assignment6;
+package edu.vanderbilt.cs282.feisele.assignment6.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -30,8 +30,13 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.Selection;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadCallback;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadRequest;
+import edu.vanderbilt.cs282.feisele.assignment6.R;
+import edu.vanderbilt.cs282.feisele.assignment6.lifecycle.LLService;
+import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema;
+import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema.ImageTable;
+import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema.Selection;
 
 /**
  * The parent class for performing the work. The child classes implement the

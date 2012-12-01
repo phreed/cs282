@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.assignment6;
+package edu.vanderbilt.cs282.feisele.assignment6.provider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -100,10 +100,6 @@ public enum DownloadContentProviderSchema {
 		public static final String CONTENT_TYPE_DIR = "vnd.android.cursor.dir/vnd.downloadimage.app";
 		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.downloadimage.app";
 
-		static {
-
-		}
-
 	}
 
 	/**
@@ -117,7 +113,7 @@ public enum DownloadContentProviderSchema {
 		/** select all tuples */
 		ALL(null);
 
-		final String code;
+		public final String code;
 
 		private Selection(String code) {
 			this.code = code;

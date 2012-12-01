@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.assignment6;
+package edu.vanderbilt.cs282.feisele.assignment6.ui;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -29,9 +29,14 @@ import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.Order;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.Selection;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadCallback;
+import edu.vanderbilt.cs282.feisele.assignment6.DownloadRequest;
+import edu.vanderbilt.cs282.feisele.assignment6.R;
+import edu.vanderbilt.cs282.feisele.assignment6.lifecycle.LLActivity;
+import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema.ImageTable;
+import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema.Order;
+import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema.Selection;
+import edu.vanderbilt.cs282.feisele.assignment6.service.DownloadService;
 
 /**
  * 

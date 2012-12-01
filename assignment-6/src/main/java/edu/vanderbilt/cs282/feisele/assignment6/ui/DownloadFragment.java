@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.assignment6;
+package edu.vanderbilt.cs282.feisele.assignment6.ui;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -20,7 +20,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
+import edu.vanderbilt.cs282.feisele.assignment6.R;
+import edu.vanderbilt.cs282.feisele.assignment6.lifecycle.LLFragment;
+import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema.ImageTable;
 
 /**
  * The Fragment is the android user interface component. Fragments can have a

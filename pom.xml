@@ -20,8 +20,10 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <name>cs282 common parent project</name>
 
   <modules>
-    <module>assignment-7</module>
-    <module>assignment-7-test</module>
+    <module>assignment-6</module>
+<!--
+    <module>assignment-6-test</module>
+-->
   </modules>
 
   <scm>
@@ -170,7 +172,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
         <plugin>
           <groupId>com.jayway.maven.plugins.android.generation2</groupId>
           <artifactId>android-maven-plugin</artifactId>
-          <version>3.4.0</version>
+          <version>3.4.1</version>
           <configuration>
            <dex>
               <jvmArguments>

@@ -1,10 +1,10 @@
-package edu.vanderbilt.cs282.feisele.assignment6;
+package edu.vanderbilt.cs282.feisele.assignment6.provider;
 
+import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema.ImageTable;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
 
 /**
  * This object is used to manage the lifecycle of the download database.
@@ -27,6 +27,7 @@ public class DownloadDatabaseHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {
+
 		final StringBuilder builder = new StringBuilder("CREATE TABLE")
 				.append(' ').append('"').append(ImageTable.NAME).append('"')
 				.append(' ').append('(');
@@ -37,6 +38,7 @@ public class DownloadDatabaseHelper extends SQLiteOpenHelper {
 		}
 		builder.append("UNIQUE (\"").append(ImageTable.ID.title)
 				.append("\") ON CONFLICT REPLACE)");
+
 		db.execSQL(builder.toString());
 	}
 

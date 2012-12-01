@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.assignment6;
+package edu.vanderbilt.cs282.feisele.assignment6.provider;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -15,7 +15,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
-import edu.vanderbilt.cs282.feisele.assignment6.DownloadContentProviderSchema.ImageTable;
+import edu.vanderbilt.cs282.feisele.assignment6.lifecycle.LLContentProvider;
+import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema.ImageTable;
 
 /**
  * This content provider holds the images downloaded by the download service. It
