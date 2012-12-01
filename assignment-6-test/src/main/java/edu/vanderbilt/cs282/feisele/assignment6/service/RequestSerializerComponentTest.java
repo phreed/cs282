@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.store;
+package edu.vanderbilt.cs282.feisele.assignment6.service;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -97,15 +97,15 @@ public class RequestSerializerComponentTest extends AndroidTestCase {
     private MockContentResolver utilGetContentResolver()
     {
         final MockContentResolver mcr = new MockContentResolver();
-        mcr.addProvider(AmmoMockSchema01.AUTHORITY,
-                        AmmoMockProvider01.getInstance(getContext()));
+        mcr.addProvider(MockSchema01.AUTHORITY,
+                        MockProvider01.getInstance(getContext()));
 
         return mcr;
     }
 
-    private AmmoMockProvider01 utilMakeTestProvider01(Context context)
+    private MockProvider01 utilMakeTestProvider01(Context context)
     {
-        return AmmoMockProvider01.getInstance(context);
+        return MockProvider01.getInstance(context);
     }
 
 
@@ -187,17 +187,17 @@ public class RequestSerializerComponentTest extends AndroidTestCase {
     private void roundTripTrial(Encoding encoding, ContentValues cv, String table, SchemaTable d) 
     {
         ((ch.qos.logback.classic.Logger) RequestSerializerComponentTest.logger).setLevel(Level.TRACE);
-        ((ch.qos.logback.classic.Logger) AmmoMockProviderBase.clogger).setLevel(Level.TRACE);
-        ((ch.qos.logback.classic.Logger) AmmoMockProviderBase.hlogger).setLevel(Level.TRACE);
-        ((ch.qos.logback.classic.Logger) AmmoMockProviderBase.logger).setLevel(Level.TRACE);
+        ((ch.qos.logback.classic.Logger) MockDownloadContentProvider.clogger).setLevel(Level.TRACE);
+        ((ch.qos.logback.classic.Logger) MockDownloadContentProvider.hlogger).setLevel(Level.TRACE);
+        ((ch.qos.logback.classic.Logger) MockDownloadContentProvider.logger).setLevel(Level.TRACE);
         ((ch.qos.logback.classic.Logger) RequestSerializer.logger).setLevel(Level.TRACE);
 
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         try {
-            provider = AmmoMockProvider01.getInstance(mContext);
+            provider = MockProvider01.getInstance(mContext);
             Assert.assertNotNull(provider);
             final MockContentResolver resolver = new MockContentResolver();
-            resolver.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            resolver.addProvider(MockSchema01.AUTHORITY, provider);
 
 	    // Stage 1: serialize from provider
             final byte[] encodedBytes = encodeTripTrial(provider, resolver, encoding, cv, d);
@@ -211,15 +211,15 @@ public class RequestSerializerComponentTest extends AndroidTestCase {
             if (provider != null) provider.release();
 
             ((ch.qos.logback.classic.Logger) RequestSerializerComponentTest.logger).setLevel(Level.OFF);
-            ((ch.qos.logback.classic.Logger) AmmoMockProviderBase.clogger).setLevel(Level.OFF);
-            ((ch.qos.logback.classic.Logger) AmmoMockProviderBase.hlogger).setLevel(Level.OFF);
+            ((ch.qos.logback.classic.Logger) MockDownloadContentProvider.clogger).setLevel(Level.OFF);
+            ((ch.qos.logback.classic.Logger) MockDownloadContentProvider.hlogger).setLevel(Level.OFF);
             ((ch.qos.logback.classic.Logger) RequestSerializer.logger).setLevel(Level.WARN);
         }
 
 
     }
 
-    private byte[] encodeTripTrial(final AmmoMockProvider01 provider,
+    private byte[] encodeTripTrial(final MockProvider01 provider,
                                    final ContentResolver resolver,
                                    final Encoding enc, final ContentValues cv, final SchemaTable d) 
     {
@@ -253,7 +253,7 @@ public class RequestSerializerComponentTest extends AndroidTestCase {
     }
 
 
-    private void decodeTripTrial(final AmmoMockProvider01 provider,
+    private void decodeTripTrial(final MockProvider01 provider,
                                  final ContentResolver resolver,
                                  final Encoding enc, final ContentValues cv, final SchemaTable d,
                                  final byte[] encodedBytes) 

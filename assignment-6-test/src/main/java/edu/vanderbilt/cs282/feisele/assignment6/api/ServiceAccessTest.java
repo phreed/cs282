@@ -3,12 +3,12 @@ package edu.vanderbilt.cs282.feisele.assignment6.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.vanderbilt.cs282.feisele.assignment6.service.DownloadService;
+
 import android.content.Intent;
 import android.os.IBinder;
 import android.test.suitebuilder.annotation.SmallTest;
-import edu.vu.isis.ammo.INetDerivedKeys;
-import edu.vu.isis.ammo.core.AmmoService;
-import edu.vu.isis.ammo.core.model.Netlink;
+
 
 /**
  * This is a simple framework for a test of a Service.  
@@ -18,7 +18,7 @@ import edu.vu.isis.ammo.core.model.Netlink;
  * To run this test, you can type:
  * <code>
  * adb shell am instrument -w \
- *   -e class edu.vu.isis.ammo.core.test.AmmoServiceTestDeprecated \
+ *   -e class edu.vu.isis.ammo.core.test.DownloadServiceTestDeprecated \
  *   edu.vu.isis.ammo.core.test/android.test.InstrumentationTestRunner
  *   </code>
  */
@@ -28,11 +28,11 @@ import edu.vu.isis.ammo.core.model.Netlink;
  *
  */
 
-public class ServiceAccessTest  extends android.test.ServiceTestCase<AmmoService> {
+public class ServiceAccessTest  extends android.test.ServiceTestCase<DownloadService> {
     private Logger logger;
     
     public ServiceAccessTest() {
-          super(AmmoService.class);
+          super(DownloadService.class);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class ServiceAccessTest  extends android.test.ServiceTestCase<AmmoService
     @SmallTest
     public void testStartable() {
         Intent startIntent = new Intent();
-        startIntent.setClass(getContext(), AmmoService.class);
+        startIntent.setClass(getContext(), DownloadService.class);
         startService(startIntent); 
     }
 
@@ -79,39 +79,9 @@ public class ServiceAccessTest  extends android.test.ServiceTestCase<AmmoService
     @SmallTest
     public void testBindable() {
         Intent startIntent = new Intent();
-        startIntent.setClass(getContext(), AmmoService.class);
+        startIntent.setClass(getContext(), DownloadService.class);
         @SuppressWarnings("unused")
         IBinder service = bindService(startIntent); 
     }
-    
-    /**
-     * FIXME
-     * <p>
-     * I believe this test is currently broken.
-     * The returned value should be an integer (qua Enum) not a boolean.
-     * <p>
-     * If the test is broken we don't need to be running it until it's fixed/
-    /*
-    public void testWiredState() {
-        logger.info("status : wired network connection");
-        
-        final int actual = AmmoPreference
-            .newInstance(this.getContext())
-            .getInt(INetDerivedKeys.PHYSICAL_LINK_PREF_IS_ACTIVE, AmmoIntents.LINK_UP);
-        logger.info("wired link status [{}]", actual);
-        assertEquals("wired link status", AmmoIntents.LINK_DOWN, actual);
-    }
-    
-    public void testWifiState() {
-        logger.info("status : WiFi network connection");
-        
-        final int actual = AmmoPreference
-            .newInstance(this.getContext())
-            .getInt(INetDerivedKeys.WIFI_PREF_IS_ACTIVE, Netlink.NETLINK_DOWN);
-        logger.info("WiFi link status [{}]", actual);
-        assertEquals("WiFi link status", Netlink.NETLINK_CONNECTED, actual);
-    }
-    
-    */
 
 }

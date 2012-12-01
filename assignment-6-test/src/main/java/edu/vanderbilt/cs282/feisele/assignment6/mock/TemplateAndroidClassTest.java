@@ -1,34 +1,42 @@
-package edu.vanderbilt.cs282.feisele.core;
+package edu.vanderbilt.cs282.feisele.assignment6.mock;
+
+import android.test.AndroidTestCase;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-
 /**
  * Template unit test for a plain Java class 
  * 
  * Use this class as a template to create new Ammo unit tests
- * for "plain" Java classes (i.e. those having no Android bits).
+ * for classes which use Android-specific components.
  * 
  * To run this test, you can type:
- * adb shell am instrument -w \
- * -e class edu.vu.isis.ammo.core.TemplatePlainJavaClassTest \
- * edu.vu.isis.ammo.core.tests/android.test.InstrumentationTestRunner
+ * <code>
+  adb shell am instrument \
+  -w edu.vu.isis.ammo.core.tests/pl.polidea.instrumentation.PolideaInstrumentationTestRunner \
+  -e class edu.vu.isis.ammo.core.TemplateAndroidClassTest 
  */
 
 // [IMPORT AMMO CLASS(ES) TO BE TESTED HERE]
 
-public class TemplatePlainJavaClassTest extends TestCase
+public class TemplateAndroidClassTest extends AndroidTestCase 
 {
-    public TemplatePlainJavaClassTest( String testName )
+    public TemplateAndroidClassTest() 
     {
-        super( testName );
     }
 
+    public TemplateAndroidClassTest( String testName )
+    {
+    }
+
+    /**
+     * @return the suite of tests being tested
+     */
     public static Test suite()
     {
-        return new TestSuite( TemplatePlainJavaClassTest.class );
+        return new TestSuite( TemplateAndroidClassTest.class );
     }
 
     /**
@@ -59,6 +67,4 @@ public class TemplatePlainJavaClassTest extends TestCase
     {
 	assertTrue(true);
     }
-    
 }
-

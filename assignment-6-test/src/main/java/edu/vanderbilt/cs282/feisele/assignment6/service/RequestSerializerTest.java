@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele;
+package edu.vanderbilt.cs282.feisele.assignment6.service;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -178,15 +178,15 @@ public class RequestSerializerTest extends AndroidTestCase {
     private MockContentResolver utilGetContentResolver()
     {
         final MockContentResolver mcr = new MockContentResolver();
-        mcr.addProvider(AmmoMockSchema01.AUTHORITY,
-                        AmmoMockProvider01.getInstance(getContext()));
+        mcr.addProvider(MockSchema01.AUTHORITY,
+                        MockProvider01.getInstance(getContext()));
 
         return mcr;
     }
 
-    private AmmoMockProvider01 utilMakeTestProvider01(Context context)
+    private MockProvider01 utilMakeTestProvider01(Context context)
     {
-        return AmmoMockProvider01.getInstance(context);
+        return MockProvider01.getInstance(context);
     }
 
     // =========================================================
@@ -229,12 +229,12 @@ public class RequestSerializerTest extends AndroidTestCase {
      * <li>checks the json string to verify it's correct
      */
     public void testSerializeFromProviderJson_table1_basic() {
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
             final MockContentResolver cr = new MockContentResolver();
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             SchemaTable1Data d = new SchemaTable1Data();
 
@@ -258,12 +258,12 @@ public class RequestSerializerTest extends AndroidTestCase {
      */
     public void testSerializeFromProviderJson_table1_random() {
         final int NUM_ITERATIONS = 10;
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
             final MockContentResolver cr = new MockContentResolver();
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             SchemaTable1Data d = new SchemaTable1Data();
 
@@ -295,12 +295,12 @@ public class RequestSerializerTest extends AndroidTestCase {
      * <li>checks the json string to verify it's correct
      */
     public void testSerializeFromProviderJson_table2_basic() {
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
             final MockContentResolver cr = new MockContentResolver();
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             SchemaTable2Data d = new SchemaTable2Data();
 
@@ -326,12 +326,12 @@ public class RequestSerializerTest extends AndroidTestCase {
      */
     public void testSerializeFromProviderJson_table2_random() {
         final int NUM_ITERATIONS = 10;
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
             final MockContentResolver cr = new MockContentResolver();
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             SchemaTable2Data d = new SchemaTable2Data();
 
@@ -363,12 +363,12 @@ public class RequestSerializerTest extends AndroidTestCase {
      * <li>checks the json string to verify it's correct
      */
     public void testSerializeFromProviderJson_table3_basic() {
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
             final MockContentResolver cr = new MockContentResolver();
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             SchemaTable3Data d = new SchemaTable3Data();
 
@@ -393,12 +393,12 @@ public class RequestSerializerTest extends AndroidTestCase {
      */
     public void testSerializeFromProviderJson_table3_random() {
         final int NUM_ITERATIONS = 10;
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
             final MockContentResolver cr = new MockContentResolver();
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             SchemaTable3Data d = new SchemaTable3Data();
 
@@ -426,13 +426,13 @@ public class RequestSerializerTest extends AndroidTestCase {
     public void testDeserializeToProviderJson_table1_basic()
     {
         // Mock provider and resolver
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         final MockContentResolver cr = new MockContentResolver();
 
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             // Choose JSON encoding for this test
             final Encoding enc = Encoding.newInstance(Encoding.Type.JSON);
@@ -461,13 +461,13 @@ public class RequestSerializerTest extends AndroidTestCase {
     public void testDeserializeToProviderJson_table2_basic()
     {
         // Mock provider and resolver
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         final MockContentResolver cr = new MockContentResolver();
 
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             // Choose JSON encoding for this test
             final Encoding enc = Encoding.newInstance(Encoding.Type.JSON);
@@ -496,13 +496,13 @@ public class RequestSerializerTest extends AndroidTestCase {
     public void testDeserializeToProviderJson_table3_basic()
     {
         // Mock provider and resolver
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         final MockContentResolver cr = new MockContentResolver();
 
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             // Choose JSON encoding for this test
             final Encoding enc = Encoding.newInstance(Encoding.Type.JSON);
@@ -535,13 +535,13 @@ public class RequestSerializerTest extends AndroidTestCase {
         final int NUM_ITERATIONS = 10;
 
         // Mock provider and resolver
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         final MockContentResolver cr = new MockContentResolver();
 
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             // Choose JSON encoding for this test
             final Encoding enc = Encoding.newInstance(Encoding.Type.JSON);
@@ -576,13 +576,13 @@ public class RequestSerializerTest extends AndroidTestCase {
         final int NUM_ITERATIONS = 10;
 
         // Mock provider and resolver
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         final MockContentResolver cr = new MockContentResolver();
 
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             // Choose JSON encoding for this test
             final Encoding enc = Encoding.newInstance(Encoding.Type.JSON);
@@ -616,13 +616,13 @@ public class RequestSerializerTest extends AndroidTestCase {
         final int NUM_ITERATIONS = 10;
 
         // Mock provider and resolver
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         final MockContentResolver cr = new MockContentResolver();
 
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             // Choose JSON encoding for this test
             final Encoding enc = Encoding.newInstance(Encoding.Type.JSON);
@@ -655,12 +655,12 @@ public class RequestSerializerTest extends AndroidTestCase {
      *
      */
     public void testSerializeFromProviderJson_withBlob_basic_smallBlob() {
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
             final MockContentResolver cr = new MockContentResolver();
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             SchemaTable3Data d = new SchemaTable3Data();
 
@@ -686,12 +686,12 @@ public class RequestSerializerTest extends AndroidTestCase {
     public void testSerializeFromProviderJson_withBlob_random_smallBlob() {
 	final int NUM_ITERATIONS = 100;
 
-	AmmoMockProvider01 provider = null;
+	MockProvider01 provider = null;
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
             final MockContentResolver cr = new MockContentResolver();
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             SchemaTable3Data d = new SchemaTable3Data();
 
@@ -773,12 +773,12 @@ public class RequestSerializerTest extends AndroidTestCase {
      * <li>checks the serialization to verify it's correct
      */
     public void testSerializeFromProviderTerse_table1_basic() {
-        AmmoMockProvider01 provider = null;
+        MockProvider01 provider = null;
         try {
             provider = utilMakeTestProvider01(mContext);
             assertNotNull(provider);
             final MockContentResolver cr = new MockContentResolver();
-            cr.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+            cr.addProvider(MockSchema01.AUTHORITY, provider);
 
             SchemaTable1Data d = new SchemaTable1Data();
 

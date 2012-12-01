@@ -1,5 +1,5 @@
 
-package edu.vanderbilt.cs282.feisele.core;
+package edu.vanderbilt.cs282.feisele.assignment6.mock;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,8 +25,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.test.mock.MockContentResolver;
 import android.test.mock.MockContext;
-import edu.vu.isis.ammo.provider.AmmoMockProvider01;
-import edu.vu.isis.ammo.provider.AmmoMockSchema01;
 
 public class MockContextRenaming extends MockContext {
     static final public Logger logger = LoggerFactory.getLogger("test.context,mock");
@@ -78,11 +76,11 @@ public class MockContextRenaming extends MockContext {
 
     @Override
     public ContentResolver getContentResolver() {
-        final ContentProvider provider = AmmoMockProvider01.getInstance(null);
+        final ContentProvider provider = MockProvider01.getInstance(null);
 
         // Content resolver
         final MockContentResolver resolver = new MockContentResolver();
-        resolver.addProvider(AmmoMockSchema01.AUTHORITY, provider);
+        resolver.addProvider(MockSchema01.AUTHORITY, provider);
         return resolver;
     }
 

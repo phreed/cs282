@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.store;
+package edu.vanderbilt.cs282.feisele.assignment6.service;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;

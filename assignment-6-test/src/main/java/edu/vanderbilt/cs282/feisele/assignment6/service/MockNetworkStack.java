@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.store;
+package edu.vanderbilt.cs282.feisele.assignment6.service;
 
 import java.net.Socket;
 import java.net.SocketException;

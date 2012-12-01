@@ -27,7 +27,15 @@ public class DownloadDatabaseHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {
+		db.execSQL(DownloadDatabaseHelper.sqlCreateTable());
+	}
 
+	/**
+	 * This method is provided to support the mock provider.
+	 * 
+	 * @return sql create table statement
+	 */
+	static public String sqlCreateTable() {
 		final StringBuilder builder = new StringBuilder("CREATE TABLE")
 				.append(' ').append('"').append(ImageTable.NAME).append('"')
 				.append(' ').append('(');
@@ -39,7 +47,7 @@ public class DownloadDatabaseHelper extends SQLiteOpenHelper {
 		builder.append("UNIQUE (\"").append(ImageTable.ID.title)
 				.append("\") ON CONFLICT REPLACE)");
 
-		db.execSQL(builder.toString());
+		return builder.toString();
 	}
 
 	/**
@@ -51,10 +59,18 @@ public class DownloadDatabaseHelper extends SQLiteOpenHelper {
 		if (oldVersion >= newVersion)
 			return;
 
-		final StringBuilder builder = new StringBuilder("DROP TABLE IF EXISTS")
-				.append(' ').append('"').append(ImageTable.NAME).append('"');
-		db.execSQL(builder.toString());
+		db.execSQL(DownloadDatabaseHelper.sqlDropTable());
 		this.onCreate(db);
+	}
+
+	/**
+	 * This method is provided to support the mock provider.
+	 * 
+	 * @return sql create table statement
+	 */
+	static public String sqlDropTable() {
+		return new StringBuilder("DROP TABLE IF EXISTS").append(' ')
+				.append('"').append(ImageTable.NAME).append('"').toString();
 	}
 
 }

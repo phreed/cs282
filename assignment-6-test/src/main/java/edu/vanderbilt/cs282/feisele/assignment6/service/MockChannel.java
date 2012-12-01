@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele;
+package edu.vanderbilt.cs282.feisele.assignment6.service;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;

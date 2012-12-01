@@ -132,8 +132,8 @@ public class DownloadActivity extends LLActivity {
 	 */
 	static abstract public class DownloadServiceConnection<T> implements
 			ServiceConnection {
-		protected T service;
-		protected boolean isBound;
+		public T service;
+		public boolean isBound;
 
 		public void onServiceConnected(ComponentName className, IBinder iservice) {
 			logger.debug("call service connected");

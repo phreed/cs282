@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele;
+package edu.vanderbilt.cs282.feisele.assignment6.service;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -94,9 +94,9 @@ public class RequestSerializerHelper {
 	public String getTable();
         public ContentValues createContentValues();
         public ContentValues createContentValuesRandom();
-        public Uri populateProviderWithData(AmmoMockProvider01 provider, ContentValues cv);
+        public Uri populateProviderWithData(MockProvider01 provider, ContentValues cv);
         public void compareJsonToCv(JSONObject json, ContentValues cv);
-        public void compareJsonToUri(byte[] jsonBytes, AmmoMockProvider01 provider, Uri uri);
+        public void compareJsonToUri(byte[] jsonBytes, MockProvider01 provider, Uri uri);
     }
 
     // =========================================================
@@ -143,7 +143,7 @@ public class RequestSerializerHelper {
             return cv;
         }
 
-        public Uri populateProviderWithData(AmmoMockProvider01 provider, ContentValues cv)
+        public Uri populateProviderWithData(MockProvider01 provider, ContentValues cv)
         {
             SQLiteDatabase db = provider.getDatabase();
             long rowid = -1;
@@ -198,7 +198,7 @@ public class RequestSerializerHelper {
         }
 
         // Compare json serialization to the provider content written from it
-        public void compareJsonToUri(byte[] jsonBytes, AmmoMockProvider01 provider, Uri uri)
+        public void compareJsonToUri(byte[] jsonBytes, MockProvider01 provider, Uri uri)
         {
             try {
 		JSONObject json = RequestSerializerHelper.jsonObjectFromBytes(jsonBytes);
@@ -302,7 +302,7 @@ public class RequestSerializerHelper {
             return cv;
         }
 
-        public Uri populateProviderWithData(AmmoMockProvider01 provider, ContentValues cv)
+        public Uri populateProviderWithData(MockProvider01 provider, ContentValues cv)
         {
             SQLiteDatabase db = provider.getDatabase();
             long rowid = -1;
@@ -367,7 +367,7 @@ public class RequestSerializerHelper {
         }
 
         // Compare json serialization to the provider content written from it
-        public void compareJsonToUri(byte[] jsonBytes, AmmoMockProvider01 provider, Uri uri)
+        public void compareJsonToUri(byte[] jsonBytes, MockProvider01 provider, Uri uri)
         {
             try {
 		JSONObject json = RequestSerializerHelper.jsonObjectFromBytes(jsonBytes);
@@ -546,7 +546,7 @@ public class RequestSerializerHelper {
             return cv;
         }
 
-        public Uri populateProviderWithData(AmmoMockProvider01 provider, ContentValues cv)
+        public Uri populateProviderWithData(MockProvider01 provider, ContentValues cv)
         {
             SQLiteDatabase db = provider.getDatabase();
             long rowid = -1;
@@ -748,7 +748,7 @@ public class RequestSerializerHelper {
         }
 
         // Compare json serialization to the provider content written from it
-        public void compareJsonToUri(byte[] jsonBytes, AmmoMockProvider01 provider, Uri uri)
+        public void compareJsonToUri(byte[] jsonBytes, MockProvider01 provider, Uri uri)
         {
             final double error_bar = 0.00001;
             try {

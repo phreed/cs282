@@ -29,7 +29,7 @@ public enum DownloadContentProviderSchema {
 	/** the authority for the content provider */
 	public static final String AUTHORITY = "edu.vanderbilt.cs282.feisele.assignment6.provider";
 	/** the base uri (if more than one table is needed) */
-	private static final Uri BASE_URI = Uri.parse("content://" + AUTHORITY);
+	public static final Uri BASE_URI = Uri.parse("content://" + AUTHORITY);
 
 	/** the uri matcher for selecting the appropriate table */
 	public static final UriMatcher URI_MATCHER;

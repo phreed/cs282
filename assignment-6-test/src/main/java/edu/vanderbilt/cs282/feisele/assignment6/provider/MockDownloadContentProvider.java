@@ -7,19 +7,15 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
-import edu.vanderbilt.cs282.feisele.assignment6.lifecycle.LLContentProvider;
+import android.test.mock.MockContentProvider;
 
 /**
- * This content provider holds the images downloaded by the download service. It
- * does not store its images in the database itself, rather it stores meta-data
- * about the images in the database and the images are saved as files. These
- * files are accessed via the openFile() method. This is to accommodate the size
- * limitation on the cursor fields.
+ * This mock content provider supplies the same behavior as the DownloadContentProvider.
  * 
  * @author "Fred Eisele" <phreed@gmail.com>
  * 
  */
-public class DownloadContentProvider extends LLContentProvider {
+public class MockDownloadContentProvider extends MockContentProvider {
 	static private final Logger logger = LoggerFactory
 			.getLogger("class.provider.download");
 
@@ -35,7 +31,6 @@ public class DownloadContentProvider extends LLContentProvider {
 
 	@Override
 	public String getType(Uri uri) {
-		super.getType(uri);
 		return this.impl.getType(uri);
 	}
 
