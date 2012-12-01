@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.api;
+package edu.vanderbilt.cs282.feisele.assignment6.api;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +28,10 @@ import edu.vu.isis.ammo.core.model.Netlink;
  *
  */
 
-public class AmmoServiceAccessTest  extends android.test.ServiceTestCase<AmmoService> {
+public class ServiceAccessTest  extends android.test.ServiceTestCase<AmmoService> {
     private Logger logger;
     
-    public AmmoServiceAccessTest() {
+    public ServiceAccessTest() {
           super(AmmoService.class);
     }
 

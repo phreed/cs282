@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.vanderbilt.cs282.feisele.annotation;
+package edu.vanderbilt.cs282.feisele.assignment6.annotation;
 
 /**
  * Used by the testing framework to determine which tests should be run and
