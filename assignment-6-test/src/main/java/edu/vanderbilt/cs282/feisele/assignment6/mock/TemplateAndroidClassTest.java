@@ -1,10 +1,8 @@
 package edu.vanderbilt.cs282.feisele.assignment6.mock;
 
-import android.test.AndroidTestCase;
-
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import android.test.AndroidTestCase;
 
 /**
  * Template unit test for a plain Java class 
@@ -18,8 +16,6 @@ import junit.framework.TestSuite;
   -w edu.vu.isis.ammo.core.tests/pl.polidea.instrumentation.PolideaInstrumentationTestRunner \
   -e class edu.vu.isis.ammo.core.TemplateAndroidClassTest 
  */
-
-// [IMPORT AMMO CLASS(ES) TO BE TESTED HERE]
 
 public class TemplateAndroidClassTest extends AndroidTestCase 
 {

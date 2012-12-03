@@ -3,6 +3,7 @@ package edu.vanderbilt.cs282.feisele.assignment6.provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
@@ -21,6 +22,12 @@ public class MockDownloadContentProvider extends MockContentProvider {
 
 	private DownloadContentProviderHelper impl = null;
 
+
+	public static ContentProvider getInstance(Object object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	@Override
 	public boolean onCreate() {
 		super.onCreate();
@@ -74,4 +81,5 @@ public class MockDownloadContentProvider extends MockContentProvider {
 			return super.delete(uri, selection, selectionArgs);
 		}
 	}
+
 }

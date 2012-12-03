@@ -12,7 +12,6 @@ import java.net.UnknownHostException;
 
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
-import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -37,6 +36,8 @@ import edu.vanderbilt.cs282.feisele.assignment6.lifecycle.LLService;
 import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema;
 import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema.ImageTable;
 import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema.Selection;
+import edu.vanderbilt.cs282.feisele.assignment6.service.NetworkProxy.JsoupProxy;
+import edu.vanderbilt.cs282.feisele.assignment6.service.NetworkProxy.UrlProxy;
 
 /**
  * The parent class for performing the work. The child classes implement the
@@ -64,6 +65,18 @@ public class DownloadService extends LLService {
 	 * The content provider client object is obtained.
 	 */
 	private ContentProviderClient cpc = null;
+	
+	/**
+	 * Objects used for testing.  These can be overridden with 
+	 * mock versions.
+	 */
+	private JsoupProxy jsoupProxy = JsoupProxy.getInstance();
+	private UrlProxy urlProxy = UrlProxy.getInstance();
+	/* package */ void setNetworkProxy(final JsoupProxy jsoupProxy, final UrlProxy uriProxy) {
+		this.jsoupProxy = jsoupProxy;
+		this.urlProxy = uriProxy;
+	}
+	
 
 	@Override
 	public void onCreate() {
@@ -128,6 +141,7 @@ public class DownloadService extends LLService {
 		}
 	}
 
+
 	/**
 	 * The workhorse for the class. Download the provided image uri. If there is
 	 * a problem an exception is raised and the calling method is expected to
@@ -163,7 +177,7 @@ public class DownloadService extends LLService {
 		final String scheme = uri.getScheme();
 		if ("http".equals(scheme)) {
 			try {
-				final Connection channel = Jsoup.connect(mainUrl);
+				final Connection channel = this.jsoupProxy.connect(mainUrl);
 
 				final Document doc = channel.get();
 				final String title = doc.title();
@@ -172,7 +186,7 @@ public class DownloadService extends LLService {
 				for (Element imageUrlElement : imageUrlSet) {
 					final String imageUrlStr = imageUrlElement.attr("src");
 					try {
-						final URL imageUrl = new URL(imageUrlStr);
+						final URL imageUrl = this.urlProxy.connect(imageUrlStr);
 						final InputStream is = imageUrl.openStream();
 						final Bitmap bitmap = BitmapFactory.decodeStream(is);
 						logger.debug("bitmap size [{}:{}]", bitmap.getWidth(),
@@ -256,15 +270,15 @@ public class DownloadService extends LLService {
 	 */
 	private void clearImages(Uri uri) {
 		try {
-			this.cpc.delete(ImageTable.CONTENT_URI,
-					Selection.BY_URI.code,
+			this.cpc.delete(ImageTable.CONTENT_URI, Selection.BY_URI.code,
 					new String[] { uri.toString() });
 		} catch (RemoteException ex) {
 			logger.error("could not expunge the old values {}", ex);
 		}
 	}
 
-	protected void storeBitmap(final Uri uri, final int ordinal, final Bitmap bitmap) {
+	protected void storeBitmap(final Uri uri, final int ordinal,
+			final Bitmap bitmap) {
 		try {
 			final ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
 			bitmap.compress(Bitmap.CompressFormat.JPEG, 40, outBytes);
@@ -272,7 +286,7 @@ public class DownloadService extends LLService {
 			final ContentValues cv = new ContentValues();
 			cv.put(ImageTable.ORDINAL.title, ordinal);
 			cv.put(ImageTable.URI.title, uri.toString());
-			
+
 			final Uri tupleUri = this.cpc.insert(ImageTable.CONTENT_URI, cv);
 			final ParcelFileDescriptor pfd = this.cpc.openFile(tupleUri, "w");
 

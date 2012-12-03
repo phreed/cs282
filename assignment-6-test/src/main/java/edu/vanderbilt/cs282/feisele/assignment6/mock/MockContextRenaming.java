@@ -7,6 +7,9 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.vanderbilt.cs282.feisele.assignment6.provider.DownloadContentProviderSchema;
+import edu.vanderbilt.cs282.feisele.assignment6.provider.MockDownloadContentProvider;
+
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentProvider;
@@ -76,11 +79,11 @@ public class MockContextRenaming extends MockContext {
 
     @Override
     public ContentResolver getContentResolver() {
-        final ContentProvider provider = MockProvider01.getInstance(null);
+        final ContentProvider provider = MockDownloadContentProvider.getInstance(null);
 
         // Content resolver
         final MockContentResolver resolver = new MockContentResolver();
-        resolver.addProvider(MockSchema01.AUTHORITY, provider);
+        resolver.addProvider(DownloadContentProviderSchema.AUTHORITY, provider);
         return resolver;
     }
 

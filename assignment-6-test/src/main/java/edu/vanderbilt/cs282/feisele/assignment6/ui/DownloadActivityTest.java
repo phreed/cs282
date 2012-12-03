@@ -1,6 +1,8 @@
-package edu.vanderbilt.cs282.feisele.ui;
+package edu.vanderbilt.cs282.feisele.assignment6.ui;
 
+import edu.vanderbilt.cs282.feisele.assignment6.ui.DownloadActivity;
 import android.test.ActivityInstrumentationTestCase2;
+
 
 /**
  * This is a simple framework for a test of an Application.  See
@@ -15,12 +17,16 @@ import android.test.ActivityInstrumentationTestCase2;
 
 
 
-/*
-public class AmmoCoreTest extends ActivityInstrumentationTestCase2<AmmoCore> {
 
-    public AmmoCoreTest() {
-        super("edu.vu.isis.ammo.core", AmmoCore.class);
+public class DownloadActivityTest extends ActivityInstrumentationTestCase2<DownloadActivity> {
+
+    public DownloadActivityTest(Class<DownloadActivity> activityClass) {
+		super(activityClass);
+		// TODO Auto-generated constructor stub
+	}
+
+	public void testDownloadActivity() {
     }
 
 }
-*/
+

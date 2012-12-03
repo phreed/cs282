@@ -7,21 +7,12 @@ import java.net.URL;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import android.net.Uri;
 
-/**
- * This class provides a mock channel for testing the network connection.
- * <p>
- * 
- * <p>
- */
-public class MockChannel extends NetworkProxy {
-	static public final Logger logger = LoggerFactory.getLogger("mock.channel");
-
-	static public class JsoupProxy extends NetworkProxy.JsoupProxy {
+public class NetworkProxy {
+	
+	static public class JsoupProxy {
 
 		protected Class<Jsoup> jsoupClass = Jsoup.class;
 
@@ -74,8 +65,8 @@ public class MockChannel extends NetworkProxy {
 			return new JsoupProxy();
 		}
 	}
-
-	static public class UrlProxy extends NetworkProxy.UrlProxy {
+	
+	static public class UrlProxy {
 
 		protected Class<Uri> uriClass = Uri.class;
 
@@ -88,7 +79,7 @@ public class MockChannel extends NetworkProxy {
 		 * @throws IllegalArgumentException
 		 * @throws IllegalAccessException
 		 * @throws InvocationTargetException
-		 * @throws MalformedURLException
+		 * @throws MalformedURLException 
 		 */
 		private URL getConnection(final String mainUrl)
 				throws SecurityException, NoSuchMethodException,
@@ -129,9 +120,5 @@ public class MockChannel extends NetworkProxy {
 		}
 	}
 
-	public static MockChannel getInstance(String string, DownloadService service) {
-		return null;
-	}
 
-	public MockNetworkStack mockNetworkStack;
 }
