@@ -26,6 +26,8 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.text.Editable;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -201,6 +203,13 @@ public class DownloadActivity extends LLActivity {
 		lm.initLoader(IMAGE_LOADER_ID, bundle, this.imageCursorLoader);
 	}
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.downloader_menu, menu);
+	    return true;
+	}
+	
 	final static String PROGRESS_RUNNING_STATE_KEY = "progress_running_state_key";
 	final static String ACTIVE_URL_KEY = "active_url_key";
 

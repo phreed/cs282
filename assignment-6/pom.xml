@@ -5,14 +5,13 @@
 
   <parent>
     <groupId>edu.vanderbilt.cs282.feisele</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>cs282-parent</artifactId>
     <version>7.0.0-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <android.target>android-8</android.target>
   </properties>
 
   <artifactId>assignment-6</artifactId>
@@ -79,11 +78,6 @@
               <goal>apk</goal>
             </goals>
             <configuration>
-              <sdk>
-                <platform>8</platform>
-                <path>${env.ANDROID_SDK}</path>
-              </sdk>
-              <undeployBeforeDeploy>true</undeployBeforeDeploy>
               <attachJar>true</attachJar>
             </configuration>
           </execution>
