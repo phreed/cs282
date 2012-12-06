@@ -10,11 +10,12 @@ This is NOT complete, but is provided in the hope that it may be useful.
 * system testing (emulators + ns3 (gns3))
 * documentation of pattern usage (java-annotations)
 
+TOPICS PRESENTED
+================
 
 assignment-6
 ------------
 
-Topics presented:
 * Building using maven
 * Multiple image download with JSoup
 * Use of the openFile() provider method
