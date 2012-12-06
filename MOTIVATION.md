@@ -1,4 +1,3 @@
-
 I will continue to update this project and welcome any comments or contributions.
 My goal is to illustrate what a production environment
 for Android development could/should have with specific implementations.
@@ -16,8 +15,11 @@ assignment-6
 ------------
 
 Topics presented:
-* Use of ViewPager
 * Building using maven
+* Multiple image download with JSoup
+* Use of the openFile() provider method
+* Use of ContentProviderClient by the Download Service
+* Replacement of direct management of Fragments using ViewPager
 
 assignment-6-test
 -----------------
