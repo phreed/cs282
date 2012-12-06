@@ -14,9 +14,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <artifactId>assignment-7</artifactId>
+  <artifactId>lab-7</artifactId>
   <packaging>apk</packaging>
-  <name>cs282 application final project</name>
+  <name>cs282 Assignment 7</name>
 
   <dependencies>
     <dependency>

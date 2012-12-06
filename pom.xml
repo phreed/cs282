@@ -20,6 +20,10 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <name>cs282 common parent project</name>
 
   <modules>
+    <module>lab-2</module>
+    <module>lab-3</module>
+    <module>lab-4</module>
+    <module>lab-5</module>
     <module>lab-6</module>
 <!--
     <module>lab-6-test</module>

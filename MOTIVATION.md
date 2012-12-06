@@ -13,6 +13,11 @@ This is NOT complete, but is provided in the hope that it may be useful.
 TOPICS PRESENTED
 ================
 
+assignment-3
+------------
+
+* Use of Fragment (support library)
+
 assignment-6
 ------------
 
