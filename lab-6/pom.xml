@@ -6,7 +6,7 @@
   <parent>
     <groupId>edu.vanderbilt.cs282.feisele</groupId>
     <artifactId>cs282-parent</artifactId>
-    <version>7.0.0-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -14,7 +14,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <artifactId>assignment-6</artifactId>
+  <artifactId>lab-6</artifactId>
   <packaging>apk</packaging>
   <name>cs282 application final project</name>
 

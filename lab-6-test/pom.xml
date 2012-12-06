@@ -4,7 +4,7 @@
   <parent>
     <groupId>edu.vanderbilt.cs282.feisele</groupId>
     <artifactId>parent</artifactId>
-    <version>7.0.0-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -13,9 +13,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <artifactId>assignment-6-test</artifactId>
+  <artifactId>lab-6-test</artifactId>
   <packaging>apk</packaging>
-  <name>Assignment 7 Test Project</name>
+  <name>Assignment 6 Test Project</name>
 
   <build>
     <plugins>
@@ -36,14 +36,14 @@
   <dependencies>
     <dependency>
       <groupId>edu.vanderbilt.cs282.feisele</groupId>
-      <artifactId>assignment-6</artifactId>
+      <artifactId>lab-6</artifactId>
       <scope>provided</scope>
       <version>${project.version}</version>
       <type>apk</type>
     </dependency>
     <dependency>
       <groupId>edu.vanderbilt.cs282.feisele</groupId>
-      <artifactId>assignment-6</artifactId>
+      <artifactId>lab-6</artifactId>
       <scope>provided</scope>
       <version>${project.version}</version>
       <type>jar</type>
