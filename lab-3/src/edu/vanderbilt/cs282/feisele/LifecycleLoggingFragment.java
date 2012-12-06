@@ -39,7 +39,10 @@ public abstract class LifecycleLoggingFragment extends Fragment {
         }
     }
     
-    @Override
+    /**
+ * Note the isDynamic parameter which allows this call 
+ * whether the fragment is dynamic or static.
+ */
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState, boolean isDynamic) {
         Log.d(TAG, "onCreateView: fragment rebuilt");
