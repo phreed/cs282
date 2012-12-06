@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Cs282 by phreed</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Cs282</h1>
+        <p>Principles of Operating Systems II</p>
+
+        <p class="view"><a href="https://github.com/phreed/cs282">View the Project on GitHub <small>phreed/cs282</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/phreed/cs282/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/phreed/cs282/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/phreed/cs282">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>cs282</h1>
+
+<p>Principles of Operating Systems II</p>
+
+<p>This project started as a class project for CS282 at Vanderbilt University, Nashville Tennessee USA.</p>
+
+<h1>MOTIVATION</h1>
+
+<p>The goals of the project are to demonstrate best practices for collaborative android development.
+The emphasis for this example differs from most android samples in that it 
+considers less human interaction concerns and more system concerns.</p>
+
+<p>Although these projects are developed with eclipse the official builds make use of maven.
+Demonstrating how to test system components such as services and content providers
+is given special attention.</p>
+
+<h1>POSIX</h1>
+
+<p>The following should work for Linux and MacOS.</p>
+
+<h2>ENVIRONMENT</h2>
+
+<p>As this is a maven project you will need to install maven.
+As it is an android project you will need to install the android development kit.
+So that the android-maven-plugin can find the needed components of
+the android SDK a few environment parameters will need to be set.
+Presuming the android SDK is install in /opt/android/</p>
+
+<p>ANDROID_SDK=/opt/android/android-sdk-linux
+ANDROID_NDK=/opt/android/android-ndk
+ANDROID_HOME=/opt/android/android-sdk-linux
+ANDROID_NDK_HOME=/opt/android/android-ndk-r8b</p>
+
+<h2>BUILD</h2>
+
+<p>mvn clean install</p>
+
+<h2>RUN</h2>
+
+<p>pushd assignment-6
+mvn android:deploy android:run
+popd</p>
+
+<h2>TEST</h2>
+
+<p>pushd assignment-6-test
+mvn install
+popd</p>
+
+<h1>WINDOWS</h1>
+
+<p>The following should work for modern Microsoft systems.
+This works but I have not written the documentation yet.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/phreed">phreed</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
