@@ -8,10 +8,13 @@ import java.net.URL;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 
+import edu.vanderbilt.cs282.feisele.lab06.annotation.DesignPattern;
+
 import android.net.Uri;
 
 public class NetworkProxy {
 	
+	@DesignPattern(name = "downloader", namespace = "gof", pattern = "strategy", role = "concrete-strategy")
 	static public class JsoupProxy {
 
 		protected Class<Jsoup> jsoupClass = Jsoup.class;
@@ -66,6 +69,7 @@ public class NetworkProxy {
 		}
 	}
 	
+	@DesignPattern(name = "downloader", namespace = "gof", pattern = "strategy", role = "concrete-strategy")
 	static public class UrlProxy {
 
 		protected Class<Uri> uriClass = Uri.class;

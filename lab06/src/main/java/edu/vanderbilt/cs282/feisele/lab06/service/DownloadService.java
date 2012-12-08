@@ -32,6 +32,7 @@ import android.os.RemoteException;
 import edu.vanderbilt.cs282.feisele.lab06.DownloadCallback;
 import edu.vanderbilt.cs282.feisele.lab06.DownloadRequest;
 import edu.vanderbilt.cs282.feisele.lab06.R;
+import edu.vanderbilt.cs282.feisele.lab06.annotation.DesignPattern;
 import edu.vanderbilt.cs282.feisele.lab06.lifecycle.LLService;
 import edu.vanderbilt.cs282.feisele.lab06.provider.DownloadContentProviderSchema;
 import edu.vanderbilt.cs282.feisele.lab06.provider.DownloadContentProviderSchema.ImageTable;
@@ -65,18 +66,18 @@ public class DownloadService extends LLService {
 	 * The content provider client object is obtained.
 	 */
 	private ContentProviderClient cpc = null;
-	
+
 	/**
-	 * Objects used for testing.  These can be overridden with 
-	 * mock versions.
+	 * Objects used for testing. These can be overridden with mock versions.
 	 */
 	private JsoupProxy jsoupProxy = JsoupProxy.getInstance();
 	private UrlProxy urlProxy = UrlProxy.getInstance();
-	/* package */ void setNetworkProxy(final JsoupProxy jsoupProxy, final UrlProxy uriProxy) {
+
+	/* package */void setNetworkProxy(final JsoupProxy jsoupProxy,
+			final UrlProxy uriProxy) {
 		this.jsoupProxy = jsoupProxy;
 		this.urlProxy = uriProxy;
 	}
-	
 
 	@Override
 	public void onCreate() {
@@ -141,7 +142,6 @@ public class DownloadService extends LLService {
 		}
 	}
 
-
 	/**
 	 * The workhorse for the class. Download the provided image uri. If there is
 	 * a problem an exception is raised and the calling method is expected to
@@ -168,6 +168,7 @@ public class DownloadService extends LLService {
 	 * @param uri
 	 *            the thing to download
 	 */
+	@DesignPattern(name = "downloader", namespace = "gof", pattern = "strategy", role = "strategy")
 	protected String downloadImages(DownloadService master, Uri uri)
 			throws FailedDownload, FileNotFoundException, IOException {
 		logger.debug("download images:");
@@ -192,18 +193,21 @@ public class DownloadService extends LLService {
 						logger.debug("bitmap size [{}:{}]", bitmap.getWidth(),
 								bitmap.getHeight());
 						if (bitmap.getWidth() < MINIMUM_WIDTH) {
-							logger.warn("bitmap too narrow {} px", bitmap.getWidth());
+							logger.warn("bitmap too narrow {} px",
+									bitmap.getWidth());
 							continue;
 						}
 						if (bitmap.getHeight() < MINIMUM_HEIGHT) {
-							logger.warn("bitmap too short {} px", bitmap.getHeight());
+							logger.warn("bitmap too short {} px",
+									bitmap.getHeight());
 							continue;
 						}
 						master.storeBitmap(uri, ordinal, bitmap);
 						ordinal++;
-						
+
 					} catch (UnknownHostException ex) {
-						logger.warn("download failed bad host {}", imageUrlStr, ex);
+						logger.warn("download failed bad host {}", imageUrlStr,
+								ex);
 					} catch (MalformedURLException ex) {
 						logger.warn(
 								"the request URL is not a HTTP or HTTPS URL, or is otherwise malformed {}",
@@ -217,7 +221,8 @@ public class DownloadService extends LLService {
 								"the response mime type is not supported and those errors are not ignored {}",
 								imageUrlStr, ex);
 					} catch (SocketTimeoutException ex) {
-						logger.warn("the connection times out {}", imageUrlStr, ex);
+						logger.warn("the connection times out {}", imageUrlStr,
+								ex);
 					} catch (IOException ex) {
 						logger.warn("download failed  {}", imageUrlStr, ex);
 					}

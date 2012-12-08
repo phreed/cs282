@@ -12,13 +12,14 @@ import android.os.RemoteException;
 import android.test.suitebuilder.annotation.MediumTest;
 import edu.vanderbilt.cs282.feisele.lab06.DownloadCallback;
 import edu.vanderbilt.cs282.feisele.lab06.DownloadRequest;
+import edu.vanderbilt.cs282.feisele.lab06.annotation.DesignPattern;
 import edu.vanderbilt.cs282.feisele.lab06.service.DownloadService;
 
 /**
- * This is a simple framework for a test of a Service.  
- * See {@link android.test.ServiceTestCase ServiceTestCase} 
- * for more information on how to write and extend service tests.
- *
+ * This is a simple framework for a test of a Service. See
+ * {@link android.test.ServiceTestCase ServiceTestCase} for more information on
+ * how to write and extend service tests.
+ * 
  */
 public class DownloadServiceApiTest extends
 		android.test.ServiceTestCase<DownloadService> {
@@ -35,7 +36,7 @@ public class DownloadServiceApiTest extends
 	protected void setUp() throws Exception {
 		super.setUp();
 
-		Intent startIntent = new Intent();
+		final Intent startIntent = new Intent();
 		startIntent.setClass(getContext(), DownloadService.class);
 		final IBinder iservice = bindService(startIntent);
 		this.request = DownloadRequest.Stub.asInterface(iservice);
@@ -54,6 +55,7 @@ public class DownloadServiceApiTest extends
 	 * that it does not require that the service do anything useful.
 	 */
 	@MediumTest
+	@DesignPattern(name = "downloader", namespace = "gof", pattern = "strategy", role = "context")
 	public void testDownloadRequest() {
 		logger.info("download request : ");
 
@@ -75,6 +77,7 @@ public class DownloadServiceApiTest extends
 				}
 
 			};
+
 			this.request.downloadImage(uri, callback);
 		} catch (RemoteException ex) {
 			logger.error("download async aidl", ex);
