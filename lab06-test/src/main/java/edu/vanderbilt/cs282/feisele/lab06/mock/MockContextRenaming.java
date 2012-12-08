@@ -42,7 +42,7 @@ public class MockContextRenaming extends MockContext {
 
         // (Context)getClass().getMethod("getTestContext").invoke(this);
         this.testContext = this.targetContext
-                .createPackageContext("edu.vu.isis.ammo.core.tests",
+                .createPackageContext("edu.vanderbilt.isis.ammo.core.tests",
                         Context.CONTEXT_IGNORE_SECURITY);
     }
 

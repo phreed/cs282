@@ -18,8 +18,8 @@ import android.test.suitebuilder.annotation.SmallTest;
  * To run this test, you can type:
  * <code>
  * adb shell am instrument -w \
- *   -e class edu.vu.isis.ammo.core.test.DownloadServiceTestDeprecated \
- *   edu.vu.isis.ammo.core.test/android.test.InstrumentationTestRunner
+ *   -e class edu.vanderbilt.isis.ammo.core.test.DownloadServiceTestDeprecated \
+ *   edu.vanderbilt.isis.ammo.core.test/android.test.InstrumentationTestRunner
  *   </code>
  */
 /**

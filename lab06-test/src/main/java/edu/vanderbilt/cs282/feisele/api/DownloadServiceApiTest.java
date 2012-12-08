@@ -20,8 +20,8 @@ import edu.vanderbilt.cs282.feisele.lab06.service.DownloadService;
  * 
  * To run this test, you can type:
  * adb shell am instrument -w \
- *   -e class edu.vu.isis.ammo.core.test.DownloadServiceTest \
- *   edu.vu.isis.ammo.core.test/android.test.InstrumentationTestRunner
+ *   -e class edu.vanderbilt.isis.ammo.core.test.DownloadServiceTest \
+ *   edu.vanderbilt.isis.ammo.core.test/android.test.InstrumentationTestRunner
  */
 /**
  * Test for AmmoCore::AmmoActivity

@@ -11,8 +11,8 @@ import android.test.ActivityInstrumentationTestCase2;
  * <p/>
  * To run this test, you can type:
  * adb shell am instrument -w \
- * -e class edu.vu.isis.ammo.core.ui.AmmoCoreTest \
- * edu.vu.isis.ammo.core.tests/android.test.InstrumentationTestRunner
+ * -e class edu.vanderbilt.isis.ammo.core.ui.AmmoCoreTest \
+ * edu.vanderbilt.isis.ammo.core.tests/android.test.InstrumentationTestRunner
  */
 
 

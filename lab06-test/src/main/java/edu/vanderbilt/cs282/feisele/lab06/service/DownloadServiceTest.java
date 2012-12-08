@@ -33,8 +33,8 @@ import edu.vanderbilt.cs282.feisele.lab06.service.NetworkProxy.UrlProxy;
  * To run this test, you can type:
  * <code>
  adb shell am instrument -w \
- -e class edu.vu.isis.ammo.core.distributor.DistributorComponentTests \
- edu.vu.isis.ammo.core.tests/pl.polidea.instrumentation.PolideaInstrumentationTestRunner
+ -e class edu.vanderbilt.isis.ammo.core.distributor.DistributorComponentTests \
+ edu.vanderbilt.isis.ammo.core.tests/pl.polidea.instrumentation.PolideaInstrumentationTestRunner
  * </code>
  */
 /**

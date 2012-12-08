@@ -13,8 +13,8 @@ import android.test.AndroidTestCase;
  * To run this test, you can type:
  * <code>
   adb shell am instrument \
-  -w edu.vu.isis.ammo.core.tests/pl.polidea.instrumentation.PolideaInstrumentationTestRunner \
-  -e class edu.vu.isis.ammo.core.TemplateAndroidClassTest 
+  -w edu.vanderbilt.isis.ammo.core.tests/pl.polidea.instrumentation.PolideaInstrumentationTestRunner \
+  -e class edu.vanderbilt.isis.ammo.core.TemplateAndroidClassTest 
  */
 
 public class TemplateAndroidClassTest extends AndroidTestCase 

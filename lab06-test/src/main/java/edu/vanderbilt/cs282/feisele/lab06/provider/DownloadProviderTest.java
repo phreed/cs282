@@ -15,8 +15,8 @@ import android.test.AndroidTestCase;
  * information on how to write and extend Application tests.
  * <p/>
  * To run this test, you can type: adb shell am instrument -w \ -e class
- * edu.vu.isis.ammo.core.ui.RequestSerializerTest \
- * edu.vu.isis.ammo.core.tests/android.test.InstrumentationTestRunner
+ * edu.vanderbilt.isis.ammo.core.ui.RequestSerializerTest \
+ * edu.vanderbilt.isis.ammo.core.tests/android.test.InstrumentationTestRunner
  */
 
 public class DownloadProviderTest extends AndroidTestCase {
@@ -27,7 +27,7 @@ public class DownloadProviderTest extends AndroidTestCase {
 	private Context context;
 
 	public DownloadProviderTest() {
-		// super("edu.vu.isis.ammo.core.distributor", RequestSerializer.class);
+		// super("edu.vanderbilt.isis.ammo.core.distributor", RequestSerializer.class);
 	}
 
 	public DownloadProviderTest(String testName) {

@@ -1,13 +1,13 @@
 #===============================================================================
 #
-# cs282 assignment 7 Integration Test
+# cs282 assignment 6 Integration Test
 #
 #===============================================================================
 
 INTRODUCTION
 ============
 
-This directory contains a project to build unit tests for cs282 assignment 7..
+This directory contains a project to build unit tests for cs282 assignment 6.
 
 
 BUILDING & RUNNING

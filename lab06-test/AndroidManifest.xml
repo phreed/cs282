@@ -16,7 +16,7 @@
 
     <uses-permission android:name="android.permission.READ_LOGS" />
     <uses-permission android:name="android.permission.RAISED_THREAD_PRIORITY" />
-    <uses-permission android:name="edu.vu.isis.ammo.permission.MAKE_REQUEST" />
+    <uses-permission android:name="edu.vanderbilt.isis.ammo.permission.MAKE_REQUEST" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
@@ -33,7 +33,7 @@
 
     <!--
     This declares that this application uses the instrumentation test runner targeting
-    the package of edu.vu.isis.ammo.core.  
+    the package of edu.vanderbilt.isis.ammo.core.  
     To run the tests see the README.
     -->
     <instrumentation android:name="android.test.InstrumentationTestRunner"

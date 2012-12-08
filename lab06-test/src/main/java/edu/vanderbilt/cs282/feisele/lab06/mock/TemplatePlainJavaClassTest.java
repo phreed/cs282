@@ -13,8 +13,8 @@ import junit.framework.TestSuite;
  * 
  * To run this test, you can type:
  * adb shell am instrument -w \
- * -e class edu.vu.isis.ammo.core.TemplatePlainJavaClassTest \
- * edu.vu.isis.ammo.core.tests/android.test.InstrumentationTestRunner
+ * -e class edu.vanderbilt.isis.ammo.core.TemplatePlainJavaClassTest \
+ * edu.vanderbilt.isis.ammo.core.tests/android.test.InstrumentationTestRunner
  */
 
 // [IMPORT AMMO CLASS(ES) TO BE TESTED HERE]
