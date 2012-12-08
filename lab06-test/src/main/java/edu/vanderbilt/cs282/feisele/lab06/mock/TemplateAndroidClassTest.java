@@ -7,14 +7,8 @@ import android.test.AndroidTestCase;
 /**
  * Template unit test for a plain Java class 
  * 
- * Use this class as a template to create new Ammo unit tests
+ * Use this class as a template to create new unit tests
  * for classes which use Android-specific components.
- * 
- * To run this test, you can type:
- * <code>
-  adb shell am instrument \
-  -w edu.vanderbilt.isis.ammo.core.tests/pl.polidea.instrumentation.PolideaInstrumentationTestRunner \
-  -e class edu.vanderbilt.isis.ammo.core.TemplateAndroidClassTest 
  */
 
 public class TemplateAndroidClassTest extends AndroidTestCase 

@@ -17,14 +17,7 @@ import edu.vanderbilt.cs282.feisele.lab06.service.DownloadService;
  * This is a simple framework for a test of a Service.  
  * See {@link android.test.ServiceTestCase ServiceTestCase} 
  * for more information on how to write and extend service tests.
- * 
- * To run this test, you can type:
- * adb shell am instrument -w \
- *   -e class edu.vanderbilt.isis.ammo.core.test.DownloadServiceTest \
- *   edu.vanderbilt.isis.ammo.core.test/android.test.InstrumentationTestRunner
- */
-/**
- * Test for AmmoCore::AmmoActivity
+ *
  */
 public class DownloadServiceApiTest extends
 		android.test.ServiceTestCase<DownloadService> {

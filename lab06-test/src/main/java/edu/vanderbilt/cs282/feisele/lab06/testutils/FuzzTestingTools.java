@@ -17,7 +17,7 @@ import android.content.ContentValues;
 
 public class FuzzTestingTools {
 	private static final Logger logger = LoggerFactory
-			.getLogger("AmmoFuzzTestingTools");
+			.getLogger("FuzzTestingTools");
 
 	// =========================================================
 	// badJsonBytes()
@@ -50,7 +50,7 @@ public class FuzzTestingTools {
 	// =========================================================
 	// badJsonString01()
 	//
-	// Create a JSON-encoded Ammo message with one key-value pair missing
+	// Create a JSON-encoded message with one key-value pair missing
 	// =========================================================
 	public static String badJsonString01(ContentValues cv) {
 		logger.trace("Select one key-value pair in the cv");
@@ -67,7 +67,7 @@ public class FuzzTestingTools {
 	// =========================================================
 	// badJsonString02()
 	//
-	// Create a JSON-encoded Ammo message with a key-value pair randomized
+	// Create a JSON-encoded message with a key-value pair randomized
 	// =========================================================
 	public static String badJsonString02(ContentValues cv) {
 		// Select one key-value pair in the cv

@@ -8,13 +8,8 @@ import junit.framework.TestSuite;
 /**
  * Template unit test for a plain Java class 
  * 
- * Use this class as a template to create new Ammo unit tests
+ * Use this class as a template to create new unit tests
  * for "plain" Java classes (i.e. those having no Android bits).
- * 
- * To run this test, you can type:
- * adb shell am instrument -w \
- * -e class edu.vanderbilt.isis.ammo.core.TemplatePlainJavaClassTest \
- * edu.vanderbilt.isis.ammo.core.tests/android.test.InstrumentationTestRunner
  */
 
 // [IMPORT AMMO CLASS(ES) TO BE TESTED HERE]

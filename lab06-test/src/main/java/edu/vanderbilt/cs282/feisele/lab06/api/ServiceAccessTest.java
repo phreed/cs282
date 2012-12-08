@@ -14,16 +14,9 @@ import android.test.suitebuilder.annotation.SmallTest;
  * This is a simple framework for a test of a Service.  
  * See {@link android.test.ServiceTestCase ServiceTestCase} 
  * for more information on how to write and extend service tests.
- * <p>
- * To run this test, you can type:
- * <code>
- * adb shell am instrument -w \
- *   -e class edu.vanderbilt.isis.ammo.core.test.DownloadServiceTestDeprecated \
- *   edu.vanderbilt.isis.ammo.core.test/android.test.InstrumentationTestRunner
- *   </code>
  */
 /**
- * Test for AmmoCore::AmmoActivity
+ * Test for DownloadService.
  * 
  *
  */

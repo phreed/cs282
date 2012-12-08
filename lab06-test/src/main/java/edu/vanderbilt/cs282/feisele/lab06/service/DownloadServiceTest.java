@@ -33,16 +33,14 @@ import edu.vanderbilt.cs282.feisele.lab06.service.NetworkProxy.UrlProxy;
  * To run this test, you can type:
  * <code>
  adb shell am instrument -w \
- -e class edu.vanderbilt.isis.ammo.core.distributor.DistributorComponentTests \
- edu.vanderbilt.isis.ammo.core.tests/pl.polidea.instrumentation.PolideaInstrumentationTestRunner
+ -e class edu.vanderbilt.cs282.feisele.lab06.service.DistributorComponentTests \
+ edu.vanderbilt.cs282.feisele.lab06.tests/pl.polidea.instrumentation.PolideaInstrumentationTestRunner
  * </code>
  */
 /**
  * This test treats the distributor as a component. the distributor is bounded
  * by:
  * <ul>
- * <li>the ammolib api {post, subscribe, retrieve}
- * <li>the application content providers via RequestSerializer
  * <li>the channels which MockProvider is used by the test.
  * </ul>
  */
@@ -71,7 +69,7 @@ public class DownloadServiceTest extends DownloadServiceTestLogger {
             "<configuration debug='true'>" +
                     " <property name='LOG_DIR' value='/mnt/sdcard' />" +
                     "  <appender name='FILE' class='ch.qos.logback.core.FileAppender'>" +
-                    "    <file>${LOG_DIR}/ammo-dist-comp-test.log</file>" +
+                    "    <file>${LOG_DIR}/lab06-test.log</file>" +
                     "    <append>true</append>" +
                     "    <encoder>" +
                     "      <pattern>%-4r [%t] %-5p %c{35} - %m%n</pattern>" +
