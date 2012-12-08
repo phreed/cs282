@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.assignment5;
+package edu.vanderbilt.cs282.feisele.lab05;
 
 /**
  * Request that a URI be downloaded.
@@ -6,7 +6,7 @@ package edu.vanderbilt.cs282.feisele.assignment5;
  *
  * @author "Fred Eisele" <phreed@gmail.com>
  */
-import edu.vanderbilt.cs282.feisele.assignment5.DownloadCallback;
+import edu.vanderbilt.cs282.feisele.lab05.DownloadCallback;
  
 interface DownloadCall {
     String downloadImage ( in Uri uri );

@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.assignment5;
+package edu.vanderbilt.cs282.feisele.lab05;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -17,7 +17,7 @@ import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
-import edu.vanderbilt.cs282.feisele.assignment5.DownloadFragment.OnDownloadHandler;
+import edu.vanderbilt.cs282.feisele.lab05.DownloadFragment.OnDownloadHandler;
 
 /**
  * 

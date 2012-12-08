@@ -16,7 +16,7 @@
 
   <artifactId>lab-4</artifactId>
   <packaging>apk</packaging>
-  <name>cs282 Assignment 4</name>
+  <name>cs282 lab04</name>
 
   <dependencies>
     <dependency>

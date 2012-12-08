@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="070" android:versionName="0.7.0-SNAPSHOT" package="edu.vanderbilt.cs282.feisele.assignment5">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="070" android:versionName="0.7.0-SNAPSHOT" package="edu.vanderbilt.cs282.feisele.lab05">
 
     <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="15"/>
 

@@ -1,4 +1,4 @@
-package edu.vanderbilt.cs282.feisele.assignment5;
+package edu.vanderbilt.cs282.feisele.lab05;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
