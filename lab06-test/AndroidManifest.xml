@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- package name must be unique so suffix with "tests" so package loader doesn't ignore us -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="edu.vanderbilt.cs282.feisele.lab06.tests"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <!--
+         We add an application tag here just so that we can indicate that
+         this package needs to link against the android.test library,
+         which is needed when building test cases.
+    -->
+    <uses-sdk
+        android:minSdkVersion="9"
+        android:targetSdkVersion="9" />
+
+    <uses-permission android:name="android.permission.READ_LOGS" />
+    <uses-permission android:name="android.permission.RAISED_THREAD_PRIORITY" />
+    <uses-permission android:name="edu.vu.isis.ammo.permission.MAKE_REQUEST" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <application>
+        <uses-library android:name="android.test.runner" />
+    </application>
+
+    <!--
+    This declares that this application uses the instrumentation test runner targeting
+    the package of edu.vu.isis.ammo.core.  
+    To run the tests see the README.
+    -->
+    <instrumentation android:name="android.test.InstrumentationTestRunner"
+                     android:targetPackage="edu.vanderbilt.cs282.feisele.lab06"
+                     android:label="tests for edu.vanderbilt.cs282.feisele.lab06"/>
+
+</manifest>

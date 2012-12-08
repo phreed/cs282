@@ -1,0 +1,35 @@
+#===============================================================================
+#
+# cs282 assignment 7 Integration Test
+#
+#===============================================================================
+
+INTRODUCTION
+============
+
+This directory contains a project to build unit tests for cs282 assignment 7..
+
+
+BUILDING & RUNNING
+==================
+
+Build the tests with either of these commands:
+The tests must be installed on a phone and run there.  You can use the 'run-tests' ant target to build the test APK, install it on a phone, and run it all in a single step.
+
+$ mvn install
+$ mvn test
+
+See "OUTPUT" below about viewing test results.
+
+Alternatively, you can "manually" install the APK onto the phone and run the tests with with these commands:
+
+$ adb install -r AmmoCoreTest-release.apk
+
+$ adb shell am instrument -w edu.vanderbilt.cs282.feisele.lab06.tests edu.vanderbilt.cs282.feisele.lab06.tests/android.test.InstrumentationTestRunner"
+
+
+OUTPUT
+======
+
+
+
