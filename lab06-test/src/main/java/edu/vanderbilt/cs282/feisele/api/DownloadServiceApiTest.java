@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.test.suitebuilder.annotation.MediumTest;
+import edu.vanderbilt.cs282.feisele.lab06.DownloadCallback;
 import edu.vanderbilt.cs282.feisele.lab06.DownloadRequest;
 import edu.vanderbilt.cs282.feisele.lab06.service.DownloadService;
 
@@ -64,7 +65,17 @@ public class DownloadServiceApiTest extends
 
 		logger.debug("download async aidl");
 		try {
-			this.request.downloadImage(uri, null);
+			final DownloadCallback.Stub callback = new DownloadCallback.Stub() {
+				public void sendPath(String url) throws RemoteException {
+					Assert.assertEquals(uri.toString(), url);
+				}
+
+				public void sendFault(String msg) throws RemoteException {
+					Assert.assertEquals("download failed", msg);
+				}
+
+			};
+			this.request.downloadImage(uri, callback);
 		} catch (RemoteException ex) {
 			logger.error("download async aidl", ex);
 			Assert.fail("could not send request to service");
